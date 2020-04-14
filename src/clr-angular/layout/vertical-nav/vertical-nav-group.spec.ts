@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -230,6 +230,14 @@ export default function(): void {
 
         expect(navGroup.expanded).toBe(true);
       });
+
+      it('updates the buttons aria-expanded attribute', () => {
+        const button: HTMLButtonElement = compiled.querySelector('.nav-group-trigger');
+        expect(button.getAttribute('aria-expanded')).toBe('false');
+        navGroup.expanded = true;
+        fixture.detectChanges();
+        expect(button.getAttribute('aria-expanded')).toBe('true');
+      });
     });
   });
 }
@@ -247,8 +255,7 @@ export default function(): void {
     `,
 })
 class GroupInternalsTestComponent {
-  @ViewChild('group', { static: false })
-  navGroup: ClrVerticalNavGroup;
+  @ViewChild('group') navGroup: ClrVerticalNavGroup;
 }
 
 @Component({
@@ -266,8 +273,7 @@ class GroupInternalsTestComponent {
     `,
 })
 class IfExpandedTestComponent {
-  @ViewChild('group', { static: false })
-  navGroup: ClrVerticalNavGroup;
+  @ViewChild('group') navGroup: ClrVerticalNavGroup;
 }
 
 @Component({
@@ -285,8 +291,7 @@ class IfExpandedTestComponent {
     `,
 })
 class TemplateAPITestComponent {
-  @ViewChild('group', { static: false })
-  navGroup: ClrVerticalNavGroup;
+  @ViewChild('group') navGroup: ClrVerticalNavGroup;
 
   expanded: boolean = false;
 

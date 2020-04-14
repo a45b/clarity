@@ -1,15 +1,19 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { Component, ViewChild } from '@angular/core';
+import { AnimationEvent } from '@angular/animations';
+
 import { async, ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { FocusTrapDirective } from '../utils/focus-trap/focus-trap.directive';
 import { ClrFocusTrapModule } from '../utils/focus-trap/focus-trap.module';
+
+import { ClrCommonStringsService } from '../utils/i18n/common-strings.service';
 
 import { ClrModal } from './modal';
 import { ClrModalModule } from './modal.module';
@@ -31,8 +35,7 @@ import { ClrModalModule } from './modal.module';
    `,
 })
 class TestComponent {
-  @ViewChild(ClrModal, { static: false })
-  modalInstance: ClrModal;
+  @ViewChild(ClrModal) modalInstance: ClrModal;
 
   opened: boolean = true;
   closable: boolean = true;
@@ -60,6 +63,7 @@ class TestDefaultsComponent {
 describe('Modal', () => {
   let fixture: ComponentFixture<any>;
   let compiled: any;
+  const commonStrings = new ClrCommonStringsService();
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -144,6 +148,29 @@ describe('Modal', () => {
   );
 
   it(
+    'should not emit clrModalOpenChange - animation will do that for us',
+    fakeAsync(() => {
+      /**
+       * Needed just to mock the event so I could enter the `if` statement.
+       */
+      const fakeAnimationEvent: AnimationEvent = {
+        fromState: '',
+        toState: 'void',
+        totalTime: 0,
+        phaseName: '',
+        element: {},
+        triggerName: '',
+        disabled: false,
+      };
+
+      spyOn(getModalInstance(fixture)._openChanged, 'emit');
+      getModalInstance(fixture).close();
+      getModalInstance(fixture).fadeDone(fakeAnimationEvent);
+      expect(getModalInstance(fixture)._openChanged.emit).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it(
     'should not close when already closed',
     fakeAsync(() => {
       fixture.componentInstance.opened = false;
@@ -179,6 +206,13 @@ describe('Modal', () => {
       // expect(fixture.componentInstance.opened).toBe(true);
       tick();
       expect(fixture.componentInstance.opened).toBe(false);
+    })
+  );
+
+  it(
+    'focuses on the title when opened',
+    fakeAsync(() => {
+      expect(document.activeElement).toEqual(fixture.nativeElement.querySelector('.modal-title-wrapper'));
     })
   );
 
@@ -268,4 +302,22 @@ describe('Modal', () => {
 
     expect(focusable).toBeDefined();
   });
+
+  it('close button should have attribute aria-label', () => {
+    expect(compiled.querySelector('.close').getAttribute('aria-label')).toBe(commonStrings.keys.close);
+  });
+
+  it(
+    'should have text based boundaries for screen readers',
+    fakeAsync(() => {
+      // MacOS + Voice Over does not properly isolate modal content so
+      // we must give screen reader users text based warnings when they
+      // are entering and leaving modal content.
+      getModalInstance(fixture).open();
+      fixture.detectChanges();
+      const messages = compiled.querySelectorAll('.clr-sr-only');
+      expect(messages[0].innerText).toBe('Beginning of Modal Content');
+      expect(messages[1].innerText).toBe('End of Modal Content');
+    })
+  );
 });

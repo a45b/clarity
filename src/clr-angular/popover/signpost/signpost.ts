@@ -1,15 +1,17 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { Component, ContentChild, ElementRef } from '@angular/core';
 
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { POPOVER_HOST_ANCHOR } from '../common/popover-host-anchor.token';
 
 import { ClrSignpostTrigger } from './signpost-trigger';
-import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { SignpostIdService } from './providers/signpost-id.service';
+import { SignpostFocusManager } from './providers/signpost-focus-manager.service';
 
 @Component({
   selector: 'clr-signpost',
@@ -19,14 +21,19 @@ import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
                 type="button"
                 class="signpost-action btn btn-small btn-link"
                 clrSignpostTrigger>
-                <clr-icon shape="info" [attr.title]="commonStrings.info"></clr-icon>
+                <clr-icon shape="info" [attr.title]="commonStrings.keys.info"></clr-icon>
             </button>
         </ng-container>
-        
+
         <ng-content></ng-content>
     `,
   host: { '[class.signpost]': 'true' },
-  providers: [IfOpenService, { provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef }],
+  providers: [
+    ClrPopoverToggleService,
+    SignpostFocusManager,
+    { provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef },
+    SignpostIdService,
+  ],
 })
 
 /*********
@@ -39,7 +46,7 @@ import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
  *
  */
 export class ClrSignpost {
-  constructor(public commonStrings: ClrCommonStrings) {}
+  constructor(public commonStrings: ClrCommonStringsService) {}
 
   /**********
    * @property useCustomTrigger
@@ -57,7 +64,7 @@ export class ClrSignpost {
    * Uses ContentChild to check for a user supplied element with the ClrSignpostTrigger on it.
    *
    */
-  @ContentChild(ClrSignpostTrigger, { static: false })
+  @ContentChild(ClrSignpostTrigger)
   set customTrigger(trigger: ClrSignpostTrigger) {
     this.useCustomTrigger = !!trigger;
   }

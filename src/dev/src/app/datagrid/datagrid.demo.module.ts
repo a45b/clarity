@@ -40,6 +40,8 @@ import { DatagridResponsiveFooterDemo } from './responsive-footer/responsive-foo
 import { DatagridTestCasesAsyncDemo } from './test-cases-async/test-cases-async';
 import { DatagridTestCasesDemo } from './test-cases/test-cases';
 import { ColorFilter } from './utils/color-filter';
+import { DatagridDetailDemo } from './detail/detail';
+import { DatagridConditionalSelectionsDemo } from './conditional-selection/conditional-selection';
 
 @NgModule({
   imports: [CommonModule, FormsModule, ClarityModule, ROUTING, UtilsDemoModule],
@@ -71,7 +73,9 @@ import { ColorFilter } from './utils/color-filter';
     DatagridTestCasesDemo,
     DatagridTestCasesAsyncDemo,
     DatagridKitchenSinkDemo,
+    DatagridConditionalSelectionsDemo,
     ColorFilter,
+    DatagridDetailDemo,
     DetailWrapper,
   ],
   exports: [
@@ -99,6 +103,7 @@ import { ColorFilter } from './utils/color-filter';
     DatagridExpandableRowsDemo,
     DatagridTestCasesDemo,
     DatagridTestCasesAsyncDemo,
+    DatagridDetailDemo,
     DatagridKitchenSinkDemo,
   ],
 })

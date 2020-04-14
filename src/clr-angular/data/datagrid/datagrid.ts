@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -11,6 +11,7 @@ import {
   ContentChildren,
   ElementRef,
   EventEmitter,
+  Inject,
   Input,
   OnDestroy,
   Output,
@@ -39,9 +40,11 @@ import { StateDebouncer } from './providers/state-debouncer.provider';
 import { StateProvider } from './providers/state.provider';
 import { TableSizeService } from './providers/table-size.service';
 import { DatagridRenderOrganizer } from './render/render-organizer';
-import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
 import { SelectionType } from './enums/selection-type';
 import { ColumnsService } from './providers/columns.service';
+import { DetailService } from './providers/detail.service';
+import { UNIQUE_ID, UNIQUE_ID_PROVIDER } from '../../utils/id-generator/id-generator.service';
 
 @Component({
   selector: 'clr-datagrid',
@@ -56,12 +59,17 @@ import { ColumnsService } from './providers/columns.service';
     RowActionService,
     ExpandableRowsCount,
     StateDebouncer,
+    DetailService,
+    UNIQUE_ID_PROVIDER,
     StateProvider,
     TableSizeService,
     ColumnsService,
     DisplayModeService,
   ],
-  host: { '[class.datagrid-host]': 'true' },
+  host: {
+    '[class.datagrid-host]': 'true',
+    '[class.datagrid-detail-open]': 'detailService.isOpen',
+  },
 })
 export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, OnDestroy {
   constructor(
@@ -73,9 +81,14 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
     private stateProvider: StateProvider<T>,
     private displayMode: DisplayModeService,
     private renderer: Renderer2,
+    public detailService: DetailService,
+    @Inject(UNIQUE_ID) datagridId: string,
     private el: ElementRef,
-    public commonStrings: ClrCommonStrings
-  ) {}
+    private page: Page,
+    public commonStrings: ClrCommonStringsService
+  ) {
+    this.detailService.id = datagridId;
+  }
 
   /* reference to the enum so that template can access */
   public SELECTION_TYPE = SelectionType;
@@ -107,8 +120,7 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
   /**
    * We grab the smart iterator from projected content
    */
-  @ContentChild(ClrDatagridItems, { static: false })
-  public iterator: ClrDatagridItems<T>;
+  @ContentChild(ClrDatagridItems) public iterator: ClrDatagridItems<T>;
 
   /**
    * Array of all selected items
@@ -143,6 +155,14 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
 
   @Output('clrDgSingleSelectedChange') singleSelectedChanged = new EventEmitter<T>(false);
 
+  @Input() clrDgSingleSelectionAriaLabel: string = this.commonStrings.keys.singleSelectionAriaLabel;
+  @Input() clrDgSingleActionableAriaLabel: string = this.commonStrings.keys.singleActionableAriaLabel;
+  @Input() clrDetailExpandableAriaLabel: string = this.commonStrings.keys.detailExpandableAriaLabel;
+
+  @Input()
+  set clrDgPreserveSelection(state: boolean) {
+    this.selection.preserveSelection = state;
+  }
   /**
    * @deprecated since 2.0, remove in 3.0
    *
@@ -165,19 +185,18 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
    * @param value
    */
   public set allSelected(value: boolean) {
-    /*
-         * This is a setter but we ignore the value.
-         * It's strange, but it lets us have an indeterminate state where only
-         * some of the items are selected.
-         */
+    /**
+     * This is a setter but we ignore the value.
+     * It's strange, but it lets us have an indeterminate state where only
+     * some of the items are selected.
+     */
     this.selection.toggleAll();
   }
 
   /**
    * Custom placeholder detection
    */
-  @ContentChild(ClrDatagridPlaceholder, { static: false })
-  public placeholder: ClrDatagridPlaceholder<T>;
+  @ContentChild(ClrDatagridPlaceholder) public placeholder: ClrDatagridPlaceholder<T>;
 
   /**
    * Hideable Column data source / detection.
@@ -191,8 +210,11 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
    */
 
   @ContentChildren(ClrDatagridRow) rows: QueryList<ClrDatagridRow<T>>;
-  @ViewChild('scrollableColumns', { static: false, read: ViewContainerRef })
+  @ViewChild('scrollableColumns', { read: ViewContainerRef })
   scrollableColumns: ViewContainerRef;
+
+  @ViewChild('datagridTable', { read: ElementRef })
+  datagridTable: ElementRef;
 
   ngAfterContentInit() {
     if (!this.items.smart) {
@@ -217,54 +239,57 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
   ngAfterViewInit() {
     // TODO: determine if we can get rid of provider wiring in view init so that subscriptions can be done earlier
     this.refresh.emit(this.stateProvider.state);
-    this._subscriptions.push(this.stateProvider.change.subscribe(state => this.refresh.emit(state)));
     this._subscriptions.push(
+      this.stateProvider.change.subscribe(state => this.refresh.emit(state)),
       this.selection.change.subscribe(s => {
         if (this.selection.selectionType === SelectionType.Single) {
           this.singleSelectedChanged.emit(<T>s);
         } else if (this.selection.selectionType === SelectionType.Multi) {
           this.selectedChanged.emit(<T[]>s);
         }
+      }),
+      this.page.change.subscribe(() => {
+        this.datagridTable.nativeElement.focus();
+      }),
+      // A subscription that listens for displayMode changes on the datagrid
+      this.displayMode.view.subscribe(viewChange => {
+        // Remove any projected columns from the projectedDisplayColumns container
+        for (let i = this._projectedDisplayColumns.length; i > 0; i--) {
+          this._projectedDisplayColumns.detach();
+        }
+        // Remove any projected columns from the projectedCalculationColumns container
+        for (let i = this._projectedCalculationColumns.length; i > 0; i--) {
+          this._projectedCalculationColumns.detach();
+        }
+        // Remove any projected rows from the calculationRows container
+        for (let i = this._calculationRows.length; i > 0; i--) {
+          this._calculationRows.detach();
+        }
+        // Remove any projected rows from the displayedRows container
+        for (let i = this._displayedRows.length; i > 0; i--) {
+          this._displayedRows.detach();
+        }
+        if (viewChange === DatagridDisplayMode.DISPLAY) {
+          // Set state, style for the datagrid to DISPLAY and insert row & columns into containers
+          this.renderer.removeClass(this.el.nativeElement, 'datagrid-calculate-mode');
+          this.columns.forEach(column => {
+            this._projectedDisplayColumns.insert(column._view);
+          });
+          this.rows.forEach(row => {
+            this._displayedRows.insert(row._view);
+          });
+        } else {
+          // Set state, style for the datagrid to CALCULATE and insert row & columns into containers
+          this.renderer.addClass(this.el.nativeElement, 'datagrid-calculate-mode');
+          this.columns.forEach(column => {
+            this._projectedCalculationColumns.insert(column._view);
+          });
+          this.rows.forEach(row => {
+            this._calculationRows.insert(row._view);
+          });
+        }
       })
     );
-    // A subscription that listens for displayMode changes on the datagrid
-    this.displayMode.view.subscribe(viewChange => {
-      // Remove any projected columns from the projectedDisplayColumns container
-      for (let i = this._projectedDisplayColumns.length; i > 0; i--) {
-        this._projectedDisplayColumns.detach();
-      }
-      // Remove any projected columns from the projectedCalculationColumns container
-      for (let i = this._projectedCalculationColumns.length; i > 0; i--) {
-        this._projectedCalculationColumns.detach();
-      }
-      // Remove any projected rows from the calculationRows container
-      for (let i = this._calculationRows.length; i > 0; i--) {
-        this._calculationRows.detach();
-      }
-      // Remove any projected rows from the displayedRows container
-      for (let i = this._displayedRows.length; i > 0; i--) {
-        this._displayedRows.detach();
-      }
-      if (viewChange === DatagridDisplayMode.DISPLAY) {
-        // Set state, style for the datagrid to DISPLAY and insert row & columns into containers
-        this.renderer.removeClass(this.el.nativeElement, 'datagrid-calculate-mode');
-        this.columns.forEach(column => {
-          this._projectedDisplayColumns.insert(column._view);
-        });
-        this.rows.forEach(row => {
-          this._displayedRows.insert(row._view);
-        });
-      } else {
-        // Set state, style for the datagrid to CALCULATE and insert row & columns into containers
-        this.renderer.addClass(this.el.nativeElement, 'datagrid-calculate-mode');
-        this.columns.forEach(column => {
-          this._projectedCalculationColumns.insert(column._view);
-        });
-        this.rows.forEach(row => {
-          this._calculationRows.insert(row._view);
-        });
-      }
-    });
   }
 
   /**
@@ -280,12 +305,12 @@ export class ClrDatagrid<T = any> implements AfterContentInit, AfterViewInit, On
     this.organizer.resize();
   }
 
-  @ViewChild('projectedDisplayColumns', { static: false, read: ViewContainerRef })
+  @ViewChild('projectedDisplayColumns', { read: ViewContainerRef })
   _projectedDisplayColumns: ViewContainerRef;
-  @ViewChild('projectedCalculationColumns', { static: false, read: ViewContainerRef })
+  @ViewChild('projectedCalculationColumns', { read: ViewContainerRef })
   _projectedCalculationColumns: ViewContainerRef;
-  @ViewChild('displayedRows', { static: false, read: ViewContainerRef })
+  @ViewChild('displayedRows', { read: ViewContainerRef })
   _displayedRows: ViewContainerRef;
-  @ViewChild('calculationRows', { static: false, read: ViewContainerRef })
+  @ViewChild('calculationRows', { read: ViewContainerRef })
   _calculationRows: ViewContainerRef;
 }

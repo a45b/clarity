@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -14,6 +14,7 @@ import { ClrIconModule } from '../../icon/icon.module';
 import { VerticalNavService } from './providers/vertical-nav.service';
 import { ClrVerticalNav } from './vertical-nav';
 import { ClrVerticalNavModule } from './vertical-nav.module';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
 
 export default function(): void {
   describe('Vertical Nav', () => {
@@ -96,6 +97,21 @@ export default function(): void {
         fixture.detectChanges();
 
         expect(vertNavService.collapsed).toBe(false);
+      });
+
+      it('updates the  aria-expanded attribute when the vertical nav is expanded/collapsed', () => {
+        vertNavService.collapsible = true;
+        vertNavService.collapsed = true;
+        fixture.detectChanges();
+
+        const toggleVertNavBtn: HTMLElement = <HTMLElement>compiled.querySelector('.nav-trigger');
+
+        expect(toggleVertNavBtn.getAttribute('aria-expanded')).toBe('false');
+
+        vertNavService.collapsed = false;
+        fixture.detectChanges();
+
+        expect(toggleVertNavBtn.getAttribute('aria-expanded')).toBe('true');
       });
     });
 
@@ -511,6 +527,39 @@ export default function(): void {
         })
       );
     });
+
+    describe('Accessibility', () => {
+      let vertNavService: VerticalNavService;
+      let commonStrings: ClrCommonStringsService;
+
+      beforeEach(() => {
+        fixture = TestBed.createComponent(NoIconsNoNavGroupTestComponent);
+        fixture.detectChanges();
+
+        compiled = fixture.nativeElement;
+        vertNavService = fixture.debugElement.query(By.directive(ClrVerticalNav)).injector.get(VerticalNavService);
+        commonStrings = new ClrCommonStringsService();
+      });
+
+      afterEach(() => {
+        fixture.destroy();
+      });
+
+      it('expect buttons to have correct aria-label from ClrCommonStringsService', () => {
+        vertNavService.collapsible = true;
+        vertNavService.collapsed = true;
+
+        fixture.detectChanges();
+
+        const verticalNavToggleString = commonStrings.keys.verticalNavToggle;
+
+        const toggleVertNavBtn: HTMLElement = <HTMLElement>compiled.querySelector('.nav-trigger');
+        const navBtn: HTMLElement = <HTMLElement>compiled.querySelector('.nav-btn');
+
+        expect(toggleVertNavBtn.getAttribute('aria-label')).toBe(verticalNavToggleString);
+        expect(navBtn.getAttribute('aria-label')).toBe(verticalNavToggleString);
+      });
+    });
   });
 }
 
@@ -589,8 +638,7 @@ class IconsAndNavGroupTestComponent {}
     `,
 })
 class ViewBasicsTestComponent {
-  @ViewChild('nav', { static: false })
-  nav: ClrVerticalNav;
+  @ViewChild('nav') nav: ClrVerticalNav;
 
   groupToggle: boolean = true;
   iconToggle: boolean = true;
@@ -610,8 +658,7 @@ class APITestComponent {
   collapsed: boolean = false;
   collapsedChange: boolean;
 
-  @ViewChild('nav', { static: false })
-  nav: ClrVerticalNav;
+  @ViewChild('nav') nav: ClrVerticalNav;
 
   updateCollapsed(val: boolean) {
     this.collapsedChange = val;
@@ -620,9 +667,9 @@ class APITestComponent {
 
 @Component({
   template: `
-        <div 
-            class="main-container" 
-            [class.open-overflow-menu]="overflowMenu" 
+        <div
+            class="main-container"
+            [class.open-overflow-menu]="overflowMenu"
             [class.open-hamburger-menu]="hamburgerMenu">
             <clr-vertical-nav>
                 <clr-vertical-nav-group>

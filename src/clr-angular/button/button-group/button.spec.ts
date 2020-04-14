@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -13,12 +13,12 @@ import { ButtonInGroupService } from '../providers/button-in-group.service';
 
 import { ClrButton } from './button';
 import { ClrButtonGroupModule } from './button-group.module';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 
 @Component({
   template: `
         <clr-button
             #button1
-            id="button1"
             type="button"
             name="button1"
             id="button1"
@@ -37,12 +37,9 @@ import { ClrButtonGroupModule } from './button-group.module';
     `,
 })
 class TestButtonComponent {
-  @ViewChild('button1', { static: false })
-  button1: ClrButton;
-  @ViewChild('button2', { static: false })
-  button2: ClrButton;
-  @ViewChild('button3', { static: false })
-  button3: ClrButton;
+  @ViewChild('button1') button1: ClrButton;
+  @ViewChild('button2') button2: ClrButton;
+  @ViewChild('button3') button3: ClrButton;
 
   flag: boolean = false;
   button2InMenu: boolean = true;
@@ -81,12 +78,9 @@ class TestButtonComponent {
     `,
 })
 export class ButtonViewTestComponent {
-  @ViewChild('button1', { static: false })
-  button1: ClrButton;
-  @ViewChild('button2', { static: false })
-  button2: ClrButton;
-  @ViewChild('button3', { static: false })
-  button3: ClrButton;
+  @ViewChild('button1') button1: ClrButton;
+  @ViewChild('button2') button2: ClrButton;
+  @ViewChild('button3') button3: ClrButton;
 
   load: boolean = true;
 }
@@ -96,6 +90,7 @@ export default function(): void {
     let fixture: ComponentFixture<any>;
     let debugEl: DebugElement;
     let componentInstance: any;
+    let toggleService: ClrPopoverToggleService;
     let buttons: HTMLButtonElement[];
 
     describe('Typescript API', () => {
@@ -103,12 +98,13 @@ export default function(): void {
         TestBed.configureTestingModule({
           imports: [ClrButtonGroupModule],
           declarations: [TestButtonComponent],
-          providers: [ButtonInGroupService],
+          providers: [ButtonInGroupService, ClrPopoverToggleService],
         });
 
         fixture = TestBed.createComponent(TestButtonComponent);
         fixture.detectChanges();
         debugEl = fixture.debugElement;
+        toggleService = debugEl.injector.get(ClrPopoverToggleService);
         componentInstance = debugEl.componentInstance;
       });
 
@@ -162,6 +158,15 @@ export default function(): void {
         componentInstance.button1.emitClick();
 
         expect(componentInstance.flag).toBe(false);
+      });
+
+      it('calls toggle service only on buttons in menu', () => {
+        spyOn(toggleService, 'toggleWithEvent');
+        expect(componentInstance.flag).toBe(false);
+        componentInstance.button1.emitClick();
+        expect(toggleService.toggleWithEvent).not.toHaveBeenCalled();
+        componentInstance.button2.emitClick();
+        expect(toggleService.toggleWithEvent).toHaveBeenCalled();
       });
 
       it('implements LoadingListener', () => {
@@ -228,7 +233,7 @@ export default function(): void {
         TestBed.configureTestingModule({
           imports: [ClrButtonGroupModule, ClrLoadingModule],
           declarations: [ButtonViewTestComponent],
-          providers: [ButtonInGroupService],
+          providers: [ButtonInGroupService, ClrPopoverToggleService],
         });
 
         fixture = TestBed.createComponent(ButtonViewTestComponent);
@@ -261,8 +266,8 @@ export default function(): void {
       });
 
       it('sets the id correctly', () => {
-        expect(buttons[0].id).toBe('null');
-        expect(buttons[1].id).toBe('null');
+        expect(buttons[0].id).toBe('');
+        expect(buttons[1].id).toBe('');
         expect(buttons[2].id).toBe('button3');
       });
 

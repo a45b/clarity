@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -7,36 +7,49 @@ import { Component, ElementRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 // I'm giving up, I'm using the datagrid ones for now.
-import { addHelpers, TestContext } from '../../data/datagrid/helpers.spec';
+import { TestContext } from '../../data/datagrid/helpers.spec';
 import { ClrIconCustomTag } from '../../icon/icon';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { POPOVER_HOST_ANCHOR } from '../common/popover-host-anchor.token';
 
 import { ClrSignpostContent } from './signpost-content';
 import { SIGNPOST_POSITIONS } from './signpost-positions';
+import { SignpostIdService } from './providers/signpost-id.service';
+import { SignpostFocusManager } from './providers/signpost-focus-manager.service';
 
 export default function(): void {
   describe('ClrSignpostContent', function() {
-    addHelpers();
-
     let context: TestContext<ClrSignpostContent, SimpleTest>;
 
     beforeEach(function() {
-      context = this.createOnly(ClrSignpostContent, SimpleTest, [IfOpenService], [ClrIconCustomTag]);
+      context = this.createOnly(
+        ClrSignpostContent,
+        SimpleTest,
+        [SignpostIdService, ClrPopoverToggleService, SignpostFocusManager],
+        [ClrIconCustomTag]
+      );
+    });
+
+    afterEach(() => {
+      context.fixture.destroy();
+    });
+
+    it('has an id', () => {
+      expect(context.clarityElement.getAttribute('id')).toBeDefined();
     });
 
     it('projects content when open', function() {
       expect(context.clarityElement.textContent).toContain('Signpost content');
     });
 
-    it('has a close button that updates the IfOpenService.open value', function() {
+    it('has a close button that updates the ClrPopoverToggleService.open value', function() {
       const closer: HTMLElement = context.clarityElement.querySelector('.signpost-action');
       expect(closer).toBeDefined();
-      const service: IfOpenService = TestBed.get(IfOpenService);
-      const testValue: boolean = service.open;
+      const service: ClrPopoverToggleService = TestBed.get(ClrPopoverToggleService);
+      service.open = true;
       closer.click();
       context.detectChanges();
-      expect(testValue).not.toEqual(service.open);
+      expect(service.open).toBeFalse();
     });
 
     it('does not allow multiple open popovers', function() {

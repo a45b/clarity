@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -9,45 +9,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; 
 import { By } from '@angular/platform-browser';
 import { DatagridRenderStep } from '../enums/render-step.enum';
 import { ClrDatagridModule } from '../datagrid.module';
-import { TestContext } from '../helpers.spec';
+import { DATAGRID_SPEC_PROVIDERS, TestContext } from '../helpers.spec';
 import { DatagridHeaderRenderer } from './header-renderer';
 import { DatagridMainRenderer } from './main-renderer';
 import { DatagridRenderOrganizer } from './render-organizer';
 import { MockDatagridRenderOrganizer } from './render-organizer.mock';
-import { DisplayModeService } from '../providers/display-mode.service';
-import { StateDebouncer } from '../providers/state-debouncer.provider';
-import { Page } from '../providers/page';
-import { ExpandableRowsCount } from '../providers/global-expandable-rows';
-import { Selection } from '../providers/selection';
-import { RowActionService } from '../providers/row-action-service';
-import { FiltersProvider } from '../providers/filters';
-import { Sort } from '../providers/sort';
-import { Items } from '../providers/items';
-import { TableSizeService } from '../providers/table-size.service';
-import { StateProvider } from '../providers/state.provider';
-import { DomAdapter } from '../../../utils/dom-adapter/dom-adapter';
 import { ClrDatagridColumn } from '../datagrid-column';
 import { ColumnsService } from '../providers/columns.service';
 import { DatagridRowRenderer } from './row-renderer';
-
-const PROVIDERS = [
-  DisplayModeService,
-  Selection,
-  Sort,
-  FiltersProvider,
-  Page,
-  Items,
-  {
-    provide: DatagridRenderOrganizer,
-    useClass: MockDatagridRenderOrganizer,
-  },
-  RowActionService,
-  ExpandableRowsCount,
-  StateDebouncer,
-  StateProvider,
-  TableSizeService,
-  DomAdapter,
-];
 
 export default function(): void {
   describe('DatagridMainRenderer directive', function() {
@@ -60,7 +29,13 @@ export default function(): void {
 
       beforeEach(function() {
         resizeSpy = spyOn(DatagridRenderOrganizer.prototype, 'resize');
-        context = this.createWithOverride(DatagridMainRenderer, StaticTest, [], [], PROVIDERS);
+        context = this.createWithOverrideDirective(
+          DatagridMainRenderer,
+          StaticTest,
+          DATAGRID_SPEC_PROVIDERS,
+          [],
+          [{ provide: DatagridRenderOrganizer, useClass: MockDatagridRenderOrganizer }]
+        );
         organizer = <MockDatagridRenderOrganizer>context.getClarityProvider(DatagridRenderOrganizer);
         computeStateSpy = spyOn(DatagridHeaderRenderer.prototype, 'getColumnWidthState');
         columnsService = context.getClarityProvider(ColumnsService);
@@ -172,7 +147,7 @@ export default function(): void {
         TestBed.configureTestingModule({
           imports: [BrowserAnimationsModule, ClrDatagridModule],
           declarations: [RenderWidthTest],
-          providers: PROVIDERS,
+          providers: DATAGRID_SPEC_PROVIDERS,
         });
         context = TestBed.createComponent(RenderWidthTest);
         context.detectChanges();
@@ -298,15 +273,51 @@ export default function(): void {
         expect(columnsService.columns[1].value.strictWidth).toBe(0);
       });
     });
+
+    describe('detail pane', function() {
+      let context: TestContext<DatagridMainRenderer<number>, ColumnsWidthTest>;
+      let columnsService: ColumnsService;
+
+      beforeEach(function() {
+        context = this.create(DatagridMainRenderer, DatagridDetailPaneTest);
+        columnsService = context.getClarityProvider(ColumnsService);
+        columnsService.resetToLastCache();
+        spyOn(columnsService, 'resetToLastCache');
+        spyOn(columnsService, 'emitStateChangeAt');
+        context.detectChanges();
+      });
+
+      it('toggles the detail pane open and emits state changes for each column', function() {
+        context.clarityDirective.toggleDetailPane(true);
+        context.detectChanges();
+        expect(columnsService.resetToLastCache).not.toHaveBeenCalled();
+        expect(columnsService.emitStateChangeAt).toHaveBeenCalledTimes(1);
+      });
+
+      it('toggles the detail pane closed and resets to cache', function() {
+        context.clarityDirective.toggleDetailPane(false);
+        expect(columnsService.resetToLastCache).toHaveBeenCalledTimes(1);
+        expect(columnsService.emitStateChangeAt).not.toHaveBeenCalled();
+      });
+
+      it('toggles the currently active detail item without clearing cache or closing', function() {
+        context.clarityDirective.toggleDetailPane(true);
+        expect(columnsService.resetToLastCache).not.toHaveBeenCalled();
+        expect(columnsService.emitStateChangeAt).toHaveBeenCalledTimes(1);
+        context.clarityDirective.toggleDetailPane(true);
+        expect(columnsService.resetToLastCache).not.toHaveBeenCalled();
+        expect(columnsService.emitStateChangeAt).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 }
 
 @Component({
   template: `
-    <div #dgContainer style="width: 232px"> 
-      <!-- 
-        Datagrid side borders = 2px, 
-        action columns are 38px wide, 
+    <div #dgContainer style="width: 232px">
+      <!--
+        Datagrid side borders = 2px,
+        action columns are 38px wide,
         Columns at min width = 2*96px
         Total calculated datagrid width should be 232px and not be wider than the div container.
       -->
@@ -320,7 +331,7 @@ export default function(): void {
         <clr-dg-column>Column</clr-dg-column>
         <clr-dg-row>
           <clr-dg-action-overflow *ngIf="hasActions">
-            <button class="action-item" (click)="return;">                
+            <button class="action-item" (click)="return;">
               Edit
             </button>
           </clr-dg-action-overflow>
@@ -367,13 +378,13 @@ class RenderWidthTest {
   hasActions = false;
   selected: any[] = [];
   singleSelect;
-  @ViewChild('dgContainer', { static: false, read: ElementRef })
+  @ViewChild('dgContainer', { read: ElementRef })
   container: ElementRef;
-  @ViewChild('datagridDefault', { static: false, read: ElementRef })
+  @ViewChild('datagridDefault', { read: ElementRef })
   datagridDefault: ElementRef;
-  @ViewChild('datagridSingleSelect', { static: false, read: ElementRef })
+  @ViewChild('datagridSingleSelect', { read: ElementRef })
   datagridSingleSelect: ElementRef;
-  @ViewChild('datagridMultiSelect', { static: false, read: ElementRef })
+  @ViewChild('datagridMultiSelect', { read: ElementRef })
   datagridMultiSelect: ElementRef;
 }
 
@@ -464,6 +475,43 @@ class ColumnsWidthTest {
     `,
 })
 class DatagridHeightTest {
+  numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+  pageSize = 5;
+
+  changeList() {
+    if (this.pageSize === 5) {
+      this.pageSize = this.numbers.length; // after 1st click
+    } else {
+      this.pageSize = 5; // after 3rd click
+    }
+  }
+}
+
+@Component({
+  template: `
+        <clr-datagrid>
+            <clr-dg-column>Number</clr-dg-column>
+            <clr-dg-column>Number</clr-dg-column>
+            <clr-dg-row *clrDgItems="let number of numbers">
+                <clr-dg-cell>{{number}}</clr-dg-cell>
+                <clr-dg-cell>{{number}}</clr-dg-cell>
+            </clr-dg-row>
+
+          <clr-dg-detail *clrIfDetail="let detail">
+            {{detail}}
+          </clr-dg-detail>
+
+            <clr-dg-footer>
+                <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="changeList()">Change
+                </button>
+                <clr-dg-pagination [clrDgPageSize]="pageSize"></clr-dg-pagination>
+            </clr-dg-footer>
+        </clr-datagrid>
+    `,
+})
+class DatagridDetailPaneTest {
   numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
   pageSize = 5;
 

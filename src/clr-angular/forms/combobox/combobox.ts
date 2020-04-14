@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -19,7 +19,7 @@ import {
 import { Subscription } from 'rxjs';
 
 import { POPOVER_HOST_ANCHOR } from '../../popover/common/popover-host-anchor.token';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { TAB } from '../../utils/key-codes/key-codes';
 
 import { ClrOption } from './option';
@@ -42,7 +42,7 @@ export function comboboxDomAdapterFactory(platformId: Object) {
   selector: 'clr-combobox',
   templateUrl: './combobox.html',
   providers: [
-    IfOpenService,
+    ClrPopoverToggleService,
     { provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef },
     OptionSelectionService,
     { provide: ComboboxDomAdapter, useFactory: comboboxDomAdapterFactory, deps: [PLATFORM_ID] },
@@ -50,14 +50,12 @@ export function comboboxDomAdapterFactory(platformId: Object) {
   host: { '[class.clr-combobox]': 'true' },
 })
 export class ClrCombobox<T> implements AfterContentInit, OnDestroy {
-  @ViewChild('input', { static: false })
-  input: ElementRef;
-  @ContentChild(ClrOptions, { static: false })
-  options: ClrOptions;
+  @ViewChild('input') input: ElementRef;
+  @ContentChild(ClrOptions) options: ClrOptions;
   private subscription: Subscription;
 
   constructor(
-    private ifOpenService: IfOpenService,
+    private toggleService: ClrPopoverToggleService,
     private optionSelectionService: OptionSelectionService<T>,
     private renderer: Renderer2,
     private domAdapter: ComboboxDomAdapter
@@ -83,12 +81,13 @@ export class ClrCombobox<T> implements AfterContentInit, OnDestroy {
 
   private registerPopoverIgnoredInput() {
     if (this.input) {
-      this.ifOpenService.registerIgnoredElement(this.input);
+      // @TODO COMBOBOX: intentionally commented; resolve while merging the Combobox
+      //this.toggleService.registerIgnoredElement(this.input);
     }
   }
 
   toggleOptionsMenu(event: MouseEvent): void {
-    this.ifOpenService.toggleWithEvent(event);
+    this.toggleService.toggleWithEvent(event);
   }
 
   @HostListener('click')
@@ -100,7 +99,7 @@ export class ClrCombobox<T> implements AfterContentInit, OnDestroy {
 
   closeMenuOnTabPress(event: KeyboardEvent) {
     if (event && event.keyCode === TAB) {
-      this.ifOpenService.open = false;
+      this.toggleService.open = false;
     }
   }
 

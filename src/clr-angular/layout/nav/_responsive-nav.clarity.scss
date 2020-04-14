@@ -10,7 +10,7 @@
   right: $right;
   bottom: $bottom;
   left: $left;
-  background: $clr-nav-background-color;
+  @include css-var(background, clr-nav-background-color, $clr-nav-background-color, $clr-use-custom-properties);
   z-index: $clr-sliding-panel-z-index;
   height: 100vh;
 }
@@ -35,7 +35,7 @@
 
     &::before,
     &::after {
-      left: 0.125rem;
+      left: $clr_baselineRem_0_125;
       transform-origin: 9%;
       transition: $clr-trigger-animation;
     }
@@ -56,9 +56,9 @@
 
     &::before,
     &::after {
-      height: 0.0833333rem;
-      width: 1rem;
-      left: -0.25rem;
+      height: $clr_baselineRem_2px;
+      width: $clr_baselineRem_1;
+      left: -1 * $clr_baselineRem_0_25;
       transform-origin: -3%;
       transition: $clr-trigger-animation;
     }
@@ -73,6 +73,8 @@
   }
 }
 
+@import './properties.responsive-nav';
+
 @include exports('responsive-nav.clarity') {
   .header-hamburger-trigger,
   .header-overflow-trigger {
@@ -80,16 +82,26 @@
   }
 
   .header-hamburger-trigger {
-    $trigger-span-psuedo-positioning: -0.291667rem;
+    $trigger-span-psuedo-positioning: -1 * $clr_baselineRem_7px;
 
     & > span,
     & > span::before,
     & > span::after {
       display: inline-block;
-      height: 0.0833333rem;
-      width: 1rem;
-      background: $clr-color-neutral-0;
-      border-radius: 0.125rem;
+      height: $clr_baselineRem_2px;
+      width: $clr_baselineRem_1;
+      @include css-var(
+        background,
+        clr-responsive-nav-trigger-bg-color,
+        $clr-color-neutral-0,
+        $clr-use-custom-properties
+      );
+      @include css-var(
+        border-radius,
+        clr-responsive-nav-hamburger-border-radius,
+        $clr-global-borderradius,
+        $clr-use-custom-properties
+      );
     }
 
     & > span {
@@ -118,16 +130,25 @@
   }
 
   .header-overflow-trigger {
-    $overflow-trigger-psuedo-positioning: -0.333333rem;
+    $overflow-trigger-psuedo-positioning: -1 * $clr_baselineRem_8px;
 
     & > span,
     & > span::before,
     & > span::after {
       display: inline-block;
-      height: 0.166667rem;
-      width: 0.166667rem;
-      background: $clr-color-neutral-0;
-      border-radius: 0.166667rem;
+      @include equilateral($clr_baselineRem_4px);
+      @include css-var(
+        background,
+        clr-responsive-nav-trigger-bg-color,
+        $clr-color-neutral-0,
+        $clr-use-custom-properties
+      );
+      @include css-var(
+        border-radius,
+        clr-responsive-nav-overflow-border-radius,
+        $clr_baselineRem_4px,
+        $clr-use-custom-properties
+      );
     }
 
     & > span {
@@ -164,16 +185,15 @@
         border: none;
         background: none;
         cursor: pointer;
-        font-size: 1rem;
-        height: $clr-header-height;
-        width: $clr-header-height;
-        padding: 0 0 0.166667rem 0;
+        font-size: $clr_baselineRem_1;
+        @include equilateral($clr-header-height);
+        padding: 0 0 $clr_baselineRem_4px 0;
         //4px to vertically align the trigger lines. display flex was not working on all browsers.
         text-align: center;
         white-space: nowrap;
 
         &:focus {
-          outline-offset: -0.208333rem; //So that the outline styles aren't hidden because of the browser
+          outline-offset: -1 * $clr_baselineRem_5px; //So that the outline styles aren't hidden because of the browser
         }
 
         @include header-nav-appearance();
@@ -221,17 +241,29 @@
           padding-left: 0;
 
           .nav-item {
-            height: 1.5rem;
+            height: $clr_baselineRem_1_5;
             margin-right: 0;
           }
 
           .nav-link {
-            padding: 0 0.5rem 0 1rem;
+            padding: 0 $clr_baselineRem_0_5 0 $clr_baselineRem_1;
             width: 100%;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-radius: $clr-global-borderradius 0 0 $clr-global-borderradius;
+            border-radius: 0;
+            @include css-var(
+              border-top-left-radius,
+              clr-global-borderradius,
+              $clr-global-borderradius,
+              $clr-use-custom-properties
+            );
+            @include css-var(
+              border-bottom-left-radius,
+              clr-global-borderradius,
+              $clr-global-borderradius,
+              $clr-use-custom-properties
+            );
 
             @include vertical-nav-link-colors();
 
@@ -249,7 +281,13 @@
           &:hover,
           &.active {
             color: inherit;
-            background: $clr-responsive-nav-hover-bg; // Is the menu that showsup when the viewport is narrow (x-axis)
+            // Is the menu that showsup when the viewport is narrow (x-axis)
+            @include css-var(
+              background,
+              clr-responsive-nav-hover-bg,
+              $clr-responsive-nav-hover-bg,
+              $clr-use-custom-properties
+            );
           }
         }
       }
@@ -276,7 +314,7 @@
 
       .header {
         .branding {
-          max-width: 10rem;
+          max-width: $clr_baselineRem_10;
           min-width: 0;
           overflow: hidden;
         }
@@ -309,7 +347,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba($clr-color-neutral-1000, 0.85);
+            @include css-var(
+              background,
+              clr-responsive-nav-header-backdrop-bg-color,
+              $clr-color-neutral-1000,
+              $clr-use-custom-properties
+            );
+            @include css-var(opacity, clr-responsive-nav-header-backdrop-opacity, 0.85, $clr-use-custom-properties);
             cursor: pointer;
             z-index: $clr-sliding-panel-backdrop-z-index;
           }
@@ -325,12 +369,17 @@
               }
 
               .nav-text {
-                $nav-text-height: 1rem;
+                $nav-text-height: $clr_baselineRem_1;
 
                 display: inline-block;
-                color: $clr-sliding-panel-text-color;
+                @include css-var(
+                  color,
+                  clr-sliding-panel-text-color,
+                  $clr-sliding-panel-text-color,
+                  $clr-use-custom-properties
+                );
                 line-height: $nav-text-height;
-                padding: 0.25rem 0 0.25rem 1rem;
+                padding: $clr_baselineRem_0_25 0 $clr_baselineRem_0_25 $clr_baselineRem_1;
                 white-space: normal;
                 font-weight: normal;
               }
@@ -365,7 +414,7 @@
             width: $clr-sliding-panel-width;
             max-width: $clr-sliding-panel-width;
             z-index: $clr-sliding-panel-z-index + 1;
-            padding-left: 1rem;
+            padding-left: $clr_baselineRem_1;
 
             & > .nav-link {
               overflow: hidden;
@@ -385,7 +434,12 @@
             }
 
             .title {
-              color: $clr-sliding-panel-text-color;
+              @include css-var(
+                color,
+                clr-sliding-panel-text-color,
+                $clr-sliding-panel-text-color,
+                $clr-use-custom-properties
+              );
               text-overflow: ellipsis;
               overflow: hidden;
             }
@@ -402,12 +456,12 @@
         .sub-nav.clr-nav-level-1,
         .sidenav.clr-nav-level-1,
         .clr-vertical-nav.clr-nav-level-1 {
-          padding-top: $clr-header-height + 1rem;
+          padding-top: $clr-header-height + $clr_baselineRem_1;
           transform: translateX(0);
           transition: $clr-sliding-panel-animation;
 
           .sidenav-content {
-            padding-bottom: 1rem;
+            padding-bottom: $clr_baselineRem_1;
           }
         }
       }
@@ -425,7 +479,7 @@
         .header-nav.clr-nav-level-2,
         .subnav.clr-nav-level-2,
         .sub-nav.clr-nav-level-2 {
-          padding-top: 1rem;
+          padding-top: $clr_baselineRem_1;
         }
 
         .header-overflow-trigger {
@@ -462,7 +516,7 @@
     .main-container {
       .header {
         .branding {
-          max-width: 6rem;
+          max-width: $clr_baselineRem_6;
           min-width: 0;
           overflow: hidden;
         }

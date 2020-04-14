@@ -1,26 +1,114 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
 import { Component } from '@angular/core';
 import { async } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import { itIgnore } from '../../../../tests/tests.helpers';
 import { TestContext } from '../../data/datagrid/helpers.spec';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, UP_ARROW } from '../../utils/key-codes/key-codes';
 
-import { DateIOService } from './providers/date-io.service';
+import { ClrDatepickerModule } from './datepicker.module';
 import { DateNavigationService } from './providers/date-navigation.service';
 import { DatepickerFocusService } from './providers/datepicker-focus.service';
 import { LocaleHelperService } from './providers/locale-helper.service';
 import { ViewManagerService } from './providers/view-manager.service';
 import { createKeyboardEvent } from './utils/test-utils';
 import { ClrYearpicker } from './yearpicker';
+import { YearRangeModel } from './model/year-range.model';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { TestBed } from '@angular/core/testing';
+import { ClrAriaLiveService } from '../../utils/a11y/aria-live.service';
+import { MockAriaLiveService } from '../../utils/a11y/aria-live.service.mock';
+import { DateIOService } from './providers/date-io.service';
 
 export default function() {
+  describe('Yearpicker Component AriaLiveSerivice', function() {
+    let announceSpyOn: () => {};
+    let ariaLiveService: ClrAriaLiveService;
+    let fixture, component;
+
+    beforeEach(function() {
+      let dateNavigationService: DateNavigationService;
+      const selectedYear: number = 2003;
+
+      dateNavigationService = new DateNavigationService();
+      dateNavigationService.initializeCalendar();
+      dateNavigationService.changeYear(selectedYear);
+
+      TestBed.configureTestingModule({
+        imports: [ClrDatepickerModule],
+        declarations: [TestComponent],
+        providers: [
+          ViewManagerService,
+          DatepickerFocusService,
+          ClrPopoverToggleService,
+          { provide: DateNavigationService, useValue: dateNavigationService },
+          LocaleHelperService,
+          DateIOService,
+          ClrCommonStringsService,
+        ],
+      }).overrideComponent(ClrYearpicker, {
+        set: {
+          providers: [{ provide: ClrAriaLiveService, useClass: MockAriaLiveService }],
+        },
+      });
+
+      fixture = TestBed.createComponent(TestComponent);
+      ariaLiveService = fixture.debugElement.query(By.directive(ClrYearpicker)).injector.get(ClrAriaLiveService);
+      component = fixture.debugElement.query(By.directive(ClrYearpicker)).injector.get(ClrYearpicker);
+      announceSpyOn = spyOn(ariaLiveService, 'announce');
+      fixture.detectChanges();
+    });
+
+    function checkLiveElementYearRangeModel(yrm: YearRangeModel) {
+      const yearFloor = yrm.yearRange[0];
+      const yearCeil = yrm.yearRange[yrm.yearRange.length - 1];
+      expect(announceSpyOn).toHaveBeenCalledWith(`The current decade is ${yearFloor} to ${yearCeil}`);
+    }
+
+    it('updates the aria-live element when the next decade button is clicked', () => {
+      checkLiveElementYearRangeModel(component.yearRangeModel);
+      const switchers: HTMLElement = fixture.debugElement.nativeElement.querySelector('.year-switchers');
+      const button: HTMLButtonElement = <HTMLButtonElement>switchers.children[2];
+      button.click();
+      fixture.detectChanges();
+
+      checkLiveElementYearRangeModel(component.yearRangeModel);
+    });
+
+    it('updates the aria-live element when the previous button is clicked', () => {
+      checkLiveElementYearRangeModel(component.yearRangeModel);
+
+      const switchers: HTMLElement = fixture.debugElement.nativeElement.querySelector('.year-switchers');
+      const button: HTMLButtonElement = <HTMLButtonElement>switchers.children[0];
+      button.click();
+      fixture.detectChanges();
+
+      checkLiveElementYearRangeModel(component.yearRangeModel);
+    });
+
+    it('updates the aria-live element when the current button is clicked', () => {
+      // Go back first
+      const switchers: HTMLElement = fixture.debugElement.nativeElement.querySelector('.year-switchers');
+      const previousButton: HTMLButtonElement = <HTMLButtonElement>switchers.children[0];
+      previousButton.click();
+      fixture.detectChanges();
+      checkLiveElementYearRangeModel(component.yearRangeModel);
+
+      const currentButton: HTMLButtonElement = <HTMLButtonElement>switchers.children[1];
+      currentButton.click();
+      fixture.detectChanges();
+
+      checkLiveElementYearRangeModel(component.yearRangeModel);
+    });
+  });
+
   describe('Yearpicker Component', () => {
     let context: TestContext<ClrYearpicker, TestComponent>;
     let dateNavigationService: DateNavigationService;
@@ -39,10 +127,10 @@ export default function() {
         context = this.create(ClrYearpicker, TestComponent, [
           ViewManagerService,
           DatepickerFocusService,
-          IfOpenService,
+          ClrPopoverToggleService,
           { provide: DateNavigationService, useValue: dateNavigationService },
           LocaleHelperService,
-          DateIOService,
+          ClrCommonStringsService,
         ]);
       });
 
@@ -119,6 +207,24 @@ export default function() {
         }
       });
 
+      it('has the correct aria-label for the previousDecade button', () => {
+        const switchers: HTMLElement = context.clarityElement.querySelector('.year-switchers');
+        const previousDecadeBtn: HTMLButtonElement = <HTMLButtonElement>switchers.children[0];
+        expect(previousDecadeBtn.attributes['aria-label'].value).toEqual('Previous decade');
+      });
+
+      it('has the correct aria-label for the currentDecade button', () => {
+        const switchers: HTMLElement = context.clarityElement.querySelector('.year-switchers');
+        const currentDecadeBtn: HTMLButtonElement = <HTMLButtonElement>switchers.children[1];
+        expect(currentDecadeBtn.attributes['aria-label'].value).toEqual('Current decade');
+      });
+
+      it('has the correct aria-label for the nextDecade button', () => {
+        const switchers: HTMLElement = context.clarityElement.querySelector('.year-switchers');
+        const nextDecadeBtn: HTMLButtonElement = <HTMLButtonElement>switchers.children[2];
+        expect(nextDecadeBtn.attributes['aria-label'].value).toEqual('Next decade');
+      });
+
       // IE doesn't handle KeyboardEvent constructor
       itIgnore(
         ['ie'],
@@ -162,10 +268,10 @@ export default function() {
         context = this.create(ClrYearpicker, TestComponent, [
           ViewManagerService,
           DatepickerFocusService,
-          IfOpenService,
+          ClrPopoverToggleService,
           { provide: DateNavigationService, useValue: dateNavigationService },
           LocaleHelperService,
-          DateIOService,
+          ClrCommonStringsService,
         ]);
       });
 
@@ -268,10 +374,10 @@ export default function() {
         context = scope.create(ClrYearpicker, TestComponent, [
           ViewManagerService,
           DatepickerFocusService,
-          IfOpenService,
+          ClrPopoverToggleService,
           { provide: DateNavigationService, useValue: dateNavigationService },
           LocaleHelperService,
-          DateIOService,
+          ClrCommonStringsService,
         ]);
       }
 

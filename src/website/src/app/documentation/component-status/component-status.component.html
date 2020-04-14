@@ -1,9 +1,9 @@
 <section class="dox-content">
-  <h1>Component Status</h1>
+  <h1 clrFocusOnViewInit>Component Status</h1>
 
   <p>
       The Clarity team is building a robust library of components as quickly as possible. Check back often for updates.
-      If a component you need is not listed here, <a href="https://github.com/vmware/clarity/issues">file a GitHub issue</a>.
+      If a component you need is not listed here, <a href="https://github.com/vmware/clarity/issues" rel="noopener" target="_blank">file a GitHub issue</a>.
   </p>
 
   <p class="component-legend">
@@ -30,7 +30,6 @@
         <th>Item</th>
         <th>UX</th>
         <th>UI</th>
-        <th class="hidden-xs-down">Core</th>
         <th>NG</th>
         <th class="hidden-xs-down">Docs</th>
       </thead>
@@ -45,9 +44,6 @@
           </td>
           <td>
             <status-dot [status]="item.ui"></status-dot>
-          </td>
-          <td class="hidden-xs-down">
-            <status-dot [status]="item.core"></status-dot>
           </td>
           <td>
             <status-dot [status]="item.ng"></status-dot>

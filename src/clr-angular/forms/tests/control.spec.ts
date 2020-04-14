@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -16,6 +16,8 @@ import { WrappedFormControl } from '../common/wrapped-control';
 import { ControlIdService } from '../common/providers/control-id.service';
 import { ControlClassService } from '../common/providers/control-class.service';
 import { MarkControlService } from '../common/providers/mark-control.service';
+import { LayoutService } from '../common/providers/layout.service';
+import { DatalistIdService } from '../datalist/providers/datalist-id.service';
 
 export function ControlStandaloneSpec(testComponent): void {
   describe('standalone use', () => {
@@ -42,7 +44,7 @@ export function ReactiveSpec(testContainer, testControl, testComponent, controlC
 
 function fullTest(description, testContainer, testControl, testComponent, controlClass) {
   describe(description, () => {
-    let control, fixture, ifErrorService, controlClassService, markControlService;
+    let control, fixture, ifErrorService, controlClassService, markControlService, controlIdService, datalistIdService;
 
     beforeEach(() => {
       spyOn(WrappedFormControl.prototype, 'ngOnInit');
@@ -50,15 +52,33 @@ function fullTest(description, testContainer, testControl, testComponent, contro
       TestBed.configureTestingModule({
         imports: [FormsModule, ClrIconModule, ClrCommonFormsModule, ReactiveFormsModule],
         declarations: [testContainer, testControl, testComponent],
-        providers: [IfErrorService, NgControlService, ControlIdService, ControlClassService, MarkControlService],
+        providers: [
+          IfErrorService,
+          NgControlService,
+          ControlIdService,
+          ControlClassService,
+          MarkControlService,
+          LayoutService,
+          DatalistIdService,
+        ],
       });
       fixture = TestBed.createComponent(testComponent);
       control = fixture.debugElement.query(By.directive(testControl));
       controlClassService = control.injector.get(ControlClassService);
       ifErrorService = control.injector.get(IfErrorService);
       markControlService = control.injector.get(MarkControlService);
+      controlIdService = control.injector.get(ControlIdService);
+      datalistIdService = control.injector.get(DatalistIdService);
       spyOn(ifErrorService, 'triggerStatusChange');
       fixture.detectChanges();
+    });
+
+    it('should have the ControlIdService', () => {
+      expect(controlIdService).toBeTruthy();
+    });
+
+    it('should have the DatalistIdService', () => {
+      expect(datalistIdService).toBeTruthy();
     });
 
     it(`should apply the ${controlClass} class`, () => {
@@ -75,7 +95,7 @@ function fullTest(description, testContainer, testControl, testComponent, contro
 
     it('correctly extends WrappedFormControl', () => {
       expect(control.injector.get(testControl).wrapperType).toBe(testContainer);
-      expect(WrappedFormControl.prototype.ngOnInit).toHaveBeenCalled();
+      expect(testControl.prototype instanceof WrappedFormControl).toBeTrue();
     });
 
     it('should set the class on the control with ControlClassService', () => {
@@ -91,6 +111,10 @@ function fullTest(description, testContainer, testControl, testComponent, contro
       control.nativeElement.dispatchEvent(new Event('blur'));
       fixture.detectChanges();
       expect(ifErrorService.triggerStatusChange).toHaveBeenCalled();
+    });
+
+    it('should have the MarkControlService', () => {
+      expect(markControlService.markAsTouched).toBeTruthy();
     });
   });
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -27,6 +27,10 @@ export class ClrLabel implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private enableGrid = true;
 
+  get labelText(): string {
+    return this.el.nativeElement && this.el.nativeElement.textContent;
+  }
+
   ngOnInit() {
     // Only add the clr-control-label if it is inside a control container
     if (this.controlIdService || this.ngControlService) {
@@ -41,7 +45,7 @@ export class ClrLabel implements OnInit, OnDestroy {
       this.el.nativeElement.className.indexOf('clr-col') < 0
     ) {
       this.renderer.addClass(this.el.nativeElement, 'clr-col-12');
-      this.renderer.addClass(this.el.nativeElement, 'clr-col-md-2');
+      this.renderer.addClass(this.el.nativeElement, `clr-col-md-${this.layoutService.labelSize}`);
     }
     if (this.controlIdService && !this.forAttr) {
       this.subscriptions.push(this.controlIdService.idChange.subscribe(id => (this.forAttr = id)));

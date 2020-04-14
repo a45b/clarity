@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -8,13 +8,12 @@ import { Component } from '@angular/core';
 
 import { itIgnore } from '../../../../tests/tests.helpers';
 import { TestContext } from '../../data/datagrid/helpers.spec';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 
 import { ClrDay } from './day';
 import { DayViewModel } from './model/day-view.model';
 import { DayModel } from './model/day.model';
 import { DateFormControlService } from './providers/date-form-control.service';
-import { DateIOService } from './providers/date-io.service';
 import { DateNavigationService } from './providers/date-navigation.service';
 import { LocaleHelperService } from './providers/locale-helper.service';
 
@@ -26,8 +25,7 @@ export default function() {
       context = this.create(ClrDay, TestComponent, [
         LocaleHelperService,
         DateNavigationService,
-        DateIOService,
-        IfOpenService,
+        ClrPopoverToggleService,
         DateFormControlService,
       ]);
     });
@@ -36,7 +34,7 @@ export default function() {
       it('renders the content based on the input provided', function() {
         expect(context.clarityElement.textContent.trim()).toMatch('1');
 
-        context.testComponent.dayView = new DayViewModel(new DayModel(2018, 0, 25), false, false, false, false);
+        context.testComponent.dayView = new DayViewModel(new DayModel(2018, 0, 25), false, false, false, false, false);
         context.detectChanges();
 
         expect(context.clarityElement.textContent.trim()).toMatch('25');
@@ -75,7 +73,21 @@ export default function() {
         expect(button.classList.contains('is-selected')).toBe(false);
       });
 
-      it('adds the .is-disabled class to the button when the input day view is selected', function() {
+      it('adds the .is-excluded class to the button when the input day view is excluded', function() {
+        const button: HTMLButtonElement = context.clarityElement.children[0];
+        expect(button.classList.contains('is-excluded')).toBe(false);
+        context.testComponent.dayView.isExcluded = true;
+
+        context.detectChanges();
+        expect(button.classList.contains('is-excluded')).toBe(true);
+
+        context.testComponent.dayView.isExcluded = false;
+
+        context.detectChanges();
+        expect(button.classList.contains('is-excluded')).toBe(false);
+      });
+
+      it('adds the .is-disabled class to the button when the input day view is disabled', function() {
         const button: HTMLButtonElement = context.clarityElement.children[0];
         expect(button.classList.contains('is-disabled')).toBe(false);
         context.testComponent.dayView.isDisabled = true;
@@ -112,6 +124,11 @@ export default function() {
         expect(context.clarityDirective.selectDay).toHaveBeenCalled();
       });
 
+      it('sets the correct value for the aria-label attribute', () => {
+        const dayBtn: HTMLButtonElement = context.clarityElement.children[0];
+        const dvm: DayViewModel = context.clarityDirective.dayView;
+        expect(dayBtn.attributes['aria-label'].value).toEqual(dvm.dayModel.toDateString());
+      });
       // @TODO determine if this actually fails in IE
       itIgnore(['ie'], 'updates the focusable date when a button is focused', () => {
         spyOn(context.clarityDirective, 'onDayViewFocus');
@@ -133,7 +150,7 @@ export default function() {
         expect(context.clarityDirective.dayView.dayModel.year).toBe(2018);
         expect(context.clarityDirective.dayView.isTodaysDate).toBe(false);
         expect(context.clarityDirective.dayView.isSelected).toBe(false);
-        expect(context.clarityDirective.dayView.isDisabled).toBe(false);
+        expect(context.clarityDirective.dayView.isExcluded).toBe(false);
         expect(context.clarityDirective.dayView.isFocusable).toBe(false);
       });
     });
@@ -170,8 +187,8 @@ export default function() {
       });
 
       it('closes the popover when a Date is selected', () => {
-        const ifOpenService: IfOpenService = context.getClarityProvider(IfOpenService);
-        expect(ifOpenService.open).toBeUndefined();
+        const toggleService: ClrPopoverToggleService = context.getClarityProvider(ClrPopoverToggleService);
+        expect(toggleService.open).toBeFalsy();
 
         const testDayView: DayViewModel = new DayViewModel(new DayModel(2018, 0, 1), false, false, false, false);
 
@@ -179,7 +196,7 @@ export default function() {
         context.clarityDirective.selectDay();
         context.detectChanges();
 
-        expect(ifOpenService.open).toBe(false);
+        expect(toggleService.open).toBe(false);
       });
 
       it('updates the focusedDay when a day is focused', () => {
@@ -217,6 +234,7 @@ export default function() {
 })
 class TestComponent {
   isToday: boolean = false;
+  isExcluded: boolean = false;
   isDisabled: boolean = false;
   isSelected: boolean = false;
   isFocusable: boolean = false;
@@ -225,6 +243,7 @@ class TestComponent {
   dayView: DayViewModel = new DayViewModel(
     this.dayModel,
     this.isToday,
+    this.isExcluded,
     this.isDisabled,
     this.isSelected,
     this.isFocusable

@@ -20,13 +20,18 @@ import { IfExpandService } from '../utils/conditional/if-expanded.service';
 @Component({
   template: `
     <clr-accordion>
-      <clr-accordion-panel [(clrAccordionPanelOpen)]="open" [clrAccordionPanelDisabled]="disabled">panel</clr-accordion-panel>
+      <clr-accordion-panel [(clrAccordionPanelOpen)]="open" [clrAccordionPanelDisabled]="disabled">
+        <clr-accordion-title>title</clr-accordion-title>
+        <clr-accordion-description *ngIf="showDescription">description</clr-accordion-description>
+        <clr-accordion-content>panel</clr-accordion-content>
+      </clr-accordion-panel>
     </clr-accordion>
   `,
 })
 class TestComponent {
   open = false;
   disabled = false;
+  showDescription = false;
 }
 
 describe('ClrAccordionPanel', () => {
@@ -164,6 +169,16 @@ describe('ClrAccordionPanel', () => {
       expect(panelRegion.getAttribute('aria-hidden')).toBe('false');
     });
 
+    it('should set proper disable attribute when disabled programmatically', () => {
+      const headerButton = panelElement.querySelector('button');
+      expect(headerButton.getAttribute('disabled')).toBe(null);
+
+      fixture.componentInstance.disabled = true;
+      fixture.detectChanges();
+
+      expect(headerButton.getAttribute('disabled')).toBe('');
+    });
+
     it('should get the appropriate panel class based on current panel state', () => {
       const panelGroup = panelElement.querySelector('[role="group"]');
       const headerButton = panelElement.querySelector('button');
@@ -178,18 +193,11 @@ describe('ClrAccordionPanel', () => {
       expect(panelGroup.classList.contains('clr-accordion-panel-open')).toBe(true);
     });
 
-    it('should add focus styles to header for ie/edge missing :focus-within support', () => {
-      const header = panelElement.querySelector('.clr-accordion-header');
-      const headerButton = panelElement.querySelector('button');
-      expect(header.classList.contains('focus-within')).toBe(false);
-
-      headerButton.focus();
+    it('should apply the appropriate class to header if the header has a description', () => {
+      expect(panelElement.querySelector('.clr-accordion-header-has-description')).toBeFalsy();
+      fixture.componentInstance.showDescription = true;
       fixture.detectChanges();
-      expect(header.classList.contains('focus-within')).toBe(true);
-
-      headerButton.blur();
-      fixture.detectChanges();
-      expect(header.classList.contains('focus-within')).toBe(false);
+      expect(panelElement.querySelector('.clr-accordion-header-has-description')).toBeTruthy();
     });
   });
 });

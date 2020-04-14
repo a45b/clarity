@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -15,7 +15,10 @@ import {
   Renderer2,
   ElementRef,
   OnDestroy,
+  Directive,
 } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { filter, distinctUntilChanged, startWith } from 'rxjs/operators';
 
 import { HostWrapper } from '../../utils/host-wrapping/host-wrapper';
 import { DynamicWrapper } from '../../utils/host-wrapping/dynamic-wrapper';
@@ -26,13 +29,15 @@ import { IfErrorService } from './if-error/if-error.service';
 import { NgControl } from '@angular/forms';
 import { ControlClassService } from './providers/control-class.service';
 import { MarkControlService } from './providers/mark-control.service';
-import { Subscription } from 'rxjs';
 
+@Directive()
 export class WrappedFormControl<W extends DynamicWrapper> implements OnInit, OnDestroy {
-  private ngControlService: NgControlService;
+  protected ngControlService: NgControlService;
   private ifErrorService: IfErrorService;
   private controlClassService: ControlClassService;
   private markControlService: MarkControlService;
+  protected renderer: Renderer2;
+  protected el: ElementRef<any>;
 
   protected subscriptions: Subscription[] = [];
   protected index = 0;
@@ -50,6 +55,8 @@ export class WrappedFormControl<W extends DynamicWrapper> implements OnInit, OnD
     renderer: Renderer2,
     el: ElementRef
   ) {
+    this.renderer = renderer;
+    this.el = el;
     try {
       this.ngControlService = injector.get(NgControlService);
       this.ifErrorService = injector.get(IfErrorService);
@@ -106,6 +113,7 @@ export class WrappedFormControl<W extends DynamicWrapper> implements OnInit, OnD
   ngOnInit() {
     this._containerInjector = new HostWrapper(this.wrapperType, this.vcr, this.index);
     this.controlIdService = this._containerInjector.get(ControlIdService);
+
     if (this._id) {
       this.controlIdService.id = this._id;
     } else {
@@ -115,9 +123,29 @@ export class WrappedFormControl<W extends DynamicWrapper> implements OnInit, OnD
     if (this.ngControlService) {
       this.ngControlService.setControl(this.ngControl);
     }
+
+    this.listenForErrorStateChanges();
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private listenForErrorStateChanges() {
+    if (this.ifErrorService) {
+      this.subscriptions.push(
+        this.ifErrorService.statusChanges
+          .pipe(startWith(false), filter(() => this.renderer && !!this.el), distinctUntilChanged())
+          .subscribe(error => this.setAriaDescribedBy(error))
+      );
+    }
+  }
+
+  private setAriaDescribedBy(error: boolean) {
+    this.renderer.setAttribute(this.el.nativeElement, 'aria-describedby', this.getAriaDescribedById(error));
+  }
+
+  private getAriaDescribedById(error: boolean): string {
+    return this.controlIdService.id.concat(error ? '-error' : '-helper');
   }
 }

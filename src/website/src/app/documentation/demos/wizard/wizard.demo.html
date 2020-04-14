@@ -90,7 +90,7 @@
                     <h3 id="step-indicators" style="margin: 21px 0 24px">Step Indicators</h3>
                     <ul class="list">
                         <li>Current step is indicated by a row-selected blue background</li>
-                        <li>Complete steps are indcated by a green bar to the left</li>
+                        <li>Complete steps are indicated by a green bar to the left</li>
                     </ul>
                 </div>
                 <div class="clr-col-md-6 clr-col-12">
@@ -177,7 +177,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <h3 id="error-validation">Error Validation</h3>
             <p>
                 Enhancement to the wizard component to add an error state to the wizard step states.
@@ -943,6 +943,11 @@ export class WizardJumpToDemo &#123;
                     action from firing when the page is current. Also
                     <code class="clr-code">false</code> by default.
                 </li>
+                <li>
+                    <code class="clr-code">clrWizardPageHasError</code> is a boolean that 
+                    applies the error style on the page. This input is
+                    <code class="clr-code">false</code> by default.
+                </li>
             </ul>
 
             <h6>Outputs of note</h6>
@@ -997,6 +1002,10 @@ export class WizardJumpToDemo &#123;
                 <li>
                     <code class="clr-code">wizardpage.current</code> is a boolean tells you if the page
                     is the current page or not.
+                </li>
+                <li>
+                    <code class="clr-code">wizardpage.hasError</code> is a boolean that tells you if the page
+                    has an error or not.
                 </li>
             </ul>
 

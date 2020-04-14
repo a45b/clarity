@@ -1,11 +1,14 @@
 language: node_js
 node_js:
-- '12'
+- '10'
 env:
   global:
   - CXX=g++-4.8
   matrix:
-  - TEST_SUITE='test:travis'
+  - TEST_SUITE='gemini set1'
+  - TEST_SUITE='gemini set2'
+  - TEST_SUITE='gemini set3'
+  - TEST_SUITE='gemini set4'
 sudo: required
 dist: trusty
 group: edge
@@ -20,22 +23,13 @@ services:
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
-    - google-chrome
+      - ubuntu-toolchain-r-test
     packages:
-    - g++-4.8
-    - google-chrome-stable
+      - g++-4.8
 cache:
   apt: true
   directories:
   - node_modules
 script:
-- node scripts/travis
-#jobs:
-#  include:
-#  - stage: publish
-#    if: "(NOT type IN (api, cron, pull_request)) AND branch = master AND repo = vmware/clarity"
-#    before_script:
-#    - npm run build
-#    script:
-#    - bash ./scripts/publish-build.sh
+- cd gemini && npm install && npm run $TEST_SUITE
+

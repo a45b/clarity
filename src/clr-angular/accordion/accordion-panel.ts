@@ -14,17 +14,20 @@ import {
   Inject,
   OnInit,
   OnChanges,
+  ContentChildren,
+  QueryList,
 } from '@angular/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 import { UNIQUE_ID_PROVIDER, UNIQUE_ID } from '../utils/id-generator/id-generator.service';
-import { ClrCommonStrings } from '../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../utils/i18n/common-strings.service';
 import { AccordionService } from './providers/accordion.service';
 import { AccordionStatus } from './enums/accordion-status.enum';
 import { panelAnimation } from './utils/animation';
 import { IfExpandService } from '../utils/conditional/if-expanded.service';
 import { AccordionPanelModel } from './models/accordion.model';
+import { ClrAccordionDescription } from './accordion-description';
 
 @Component({
   selector: 'clr-accordion-panel',
@@ -38,13 +41,14 @@ export class ClrAccordionPanel implements OnInit, OnChanges {
   @Input('clrAccordionPanelDisabled') disabled = false;
   @Input('clrAccordionPanelOpen') panelOpen = false;
   @Output('clrAccordionPanelOpenChange') panelOpenChange = new EventEmitter<boolean>();
+  @ContentChildren(ClrAccordionDescription) accordionDescription: QueryList<ClrAccordionDescription>;
 
   panel: Observable<AccordionPanelModel>;
-  focusHeader = false;
   readonly AccordionStatus = AccordionStatus;
+  isAccordion = true;
 
   constructor(
-    public commonStrings: ClrCommonStrings,
+    public commonStrings: ClrCommonStringsService,
     private accordionService: AccordionService,
     private ifExpandService: IfExpandService,
     @Inject(UNIQUE_ID) public id: string
@@ -79,6 +83,14 @@ export class ClrAccordionPanel implements OnInit, OnChanges {
 
   getPanelStateClasses(panel: AccordionPanelModel) {
     return `clr-accordion-panel-${panel.status} ${panel.open ? 'clr-accordion-panel-open' : ''}`;
+  }
+
+  getAccordionContentId(id: string) {
+    return `clr-accordion-content-${id}'`;
+  }
+
+  getAccordionHeaderId(id: string) {
+    return `clr-accordion-header-${id}`;
   }
 
   private emitPanelChange(panel: AccordionPanelModel) {

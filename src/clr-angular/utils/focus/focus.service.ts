@@ -14,8 +14,7 @@ import { FocusableItem } from './focusable-item/focusable-item';
 export class FocusService {
   constructor(private renderer: Renderer2) {}
 
-  private container: HTMLElement;
-
+  private _unlistenFuncs = [];
   private _current: FocusableItem;
   public get current() {
     return this._current;
@@ -28,24 +27,37 @@ export class FocusService {
   listenToArrowKeys(el: HTMLElement) {
     // The following listeners return false when there was an action to take for the key pressed,
     // in order to prevent the default behavior of that key.
-    this.renderer.listen(el, 'keydown.arrowup', () => !this.move(ArrowKeyDirection.UP));
-    this.renderer.listen(el, 'keydown.arrowdown', () => !this.move(ArrowKeyDirection.DOWN));
-    this.renderer.listen(el, 'keydown.arrowleft', () => !this.move(ArrowKeyDirection.LEFT));
-    this.renderer.listen(el, 'keydown.arrowright', () => !this.move(ArrowKeyDirection.RIGHT));
+    this._unlistenFuncs.push(this.renderer.listen(el, 'keydown.arrowup', event => !this.move(ArrowKeyDirection.UP)));
+    this._unlistenFuncs.push(
+      this.renderer.listen(el, 'keydown.arrowdown', event => !this.move(ArrowKeyDirection.DOWN))
+    );
+    this._unlistenFuncs.push(
+      this.renderer.listen(el, 'keydown.arrowleft', event => !this.move(ArrowKeyDirection.LEFT))
+    );
+    this._unlistenFuncs.push(
+      this.renderer.listen(el, 'keydown.arrowright', event => !this.move(ArrowKeyDirection.RIGHT))
+    );
   }
 
   registerContainer(el: HTMLElement) {
-    this.container = el;
     this.renderer.setAttribute(el, 'tabindex', '0');
     this.listenToArrowKeys(el);
     // The following listeners return false when there was an action to take for the key pressed,
     // in order to prevent the default behavior of that key.
-    this.renderer.listen(el, 'keydown.space', () => !this.activateCurrent());
-    this.renderer.listen(el, 'keydown.enter', () => !this.activateCurrent());
+    this._unlistenFuncs.push(this.renderer.listen(el, 'keydown.space', () => !this.activateCurrent()));
+    this._unlistenFuncs.push(this.renderer.listen(el, 'keydown.enter', () => !this.activateCurrent()));
   }
 
   moveTo(item: FocusableItem) {
-    this.renderer.setAttribute(this.container, 'aria-activedescendant', item.id);
+    /**
+     * Make sure that item is not undefined,
+     * This is safety net in the case that someone sometime decide to
+     * call this method without having FocusableItem.
+     */
+    if (item === undefined) {
+      return;
+    }
+
     if (this.current) {
       this.current.blur();
     }
@@ -53,25 +65,23 @@ export class FocusService {
     this._current = item;
   }
 
-  /**
-   * The second parameter, optional, is here to allow recursion to skip disabled items.
-   */
-  move(direction: ArrowKeyDirection, current = this.current) {
-    const next = current[direction];
-    if (next) {
-      // Turning the value into an Observable isn't great, but it's the fastest way to avoid code duplication.
-      // If performance ever matters for this, we can refactor using additional private methods.
-      const nextObs = isObservable(next) ? next : of(next);
-      nextObs.subscribe(item => {
-        if (item.disabled) {
-          return this.move(direction, item);
-        } else {
-          this.moveTo(item);
-          return true;
-        }
-      });
+  move(direction: ArrowKeyDirection): boolean {
+    let moved = false;
+    if (this.current) {
+      const next = this.current[direction];
+      if (next) {
+        // Turning the value into an Observable isn't great, but it's the fastest way to avoid code duplication.
+        // If performance ever matters for this, we can refactor using additional private methods.
+        const nextObs = isObservable(next) ? next : of(next);
+        nextObs.subscribe(item => {
+          if (item) {
+            this.moveTo(item);
+            moved = true;
+          }
+        });
+      }
     }
-    return false;
+    return moved;
   }
 
   activateCurrent() {
@@ -80,6 +90,10 @@ export class FocusService {
       return true;
     }
     return false;
+  }
+
+  public detachListeners() {
+    this._unlistenFuncs.forEach((unlisten: () => void) => unlisten());
   }
 }
 

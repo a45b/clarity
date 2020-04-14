@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -32,10 +32,11 @@ import { ExpandableRowsCount } from './providers/global-expandable-rows';
 import { RowActionService } from './providers/row-action-service';
 import { Selection } from './providers/selection';
 import { WrappedRow } from './wrapped-row';
-import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
 import { SelectionType } from './enums/selection-type';
 import { DatagridIfExpandService } from './datagrid-if-expanded.service';
 import { ClrExpandableAnimation } from '../../utils/animations/expandable-animation/expandable-animation';
+import { DetailService } from './providers/detail.service';
 
 let nbRow: number = 0;
 
@@ -62,8 +63,7 @@ export class ClrDatagridRow<T = any> implements AfterContentInit, AfterViewInit 
   /* reference to the enum so that template can access */
   public SELECTION_TYPE = SelectionType;
 
-  @ViewChild(ClrExpandableAnimation, { static: false })
-  expandAnimation: ClrExpandableAnimation;
+  @ViewChild(ClrExpandableAnimation) expandAnimation: ClrExpandableAnimation;
 
   /**
    * Model of the row, to use for selection
@@ -79,11 +79,12 @@ export class ClrDatagridRow<T = any> implements AfterContentInit, AfterViewInit 
     public rowActionService: RowActionService,
     public globalExpandable: ExpandableRowsCount,
     public expand: DatagridIfExpandService,
+    public detailService: DetailService,
     private displayMode: DisplayModeService,
     private vcr: ViewContainerRef,
     private renderer: Renderer2,
     private el: ElementRef,
-    public commonStrings: ClrCommonStrings
+    public commonStrings: ClrCommonStringsService
   ) {
     nbRow++;
     this.id = 'clr-dg-row' + nbRow;
@@ -129,6 +130,16 @@ export class ClrDatagridRow<T = any> implements AfterContentInit, AfterViewInit 
     }
   }
 
+  // By default every item is selectable
+  @Input('clrDgSelectable')
+  public set clrDgSelectable(value: boolean) {
+    this.selection.lockItem(this.item, value === false);
+  }
+
+  public get clrDgSelectable() {
+    return !this.selection.isLocked(this.item);
+  }
+
   @Output('clrDgSelectedChange') selectedChanged = new EventEmitter<boolean>(false);
 
   public toggle(selected = !this.selected) {
@@ -157,6 +168,25 @@ export class ClrDatagridRow<T = any> implements AfterContentInit, AfterViewInit 
     }
   }
 
+  @ViewChild('detailButton') detailButton;
+
+  private _detailOpenLabel = '';
+  @Input()
+  set clrDgDetailOpenLabel(label: string) {
+    this._detailOpenLabel = label;
+  }
+  get clrDgDetailOpenLabel(): string {
+    return this._detailOpenLabel ? this._detailOpenLabel : this.commonStrings.keys.open;
+  }
+  private _detailCloseLabel = '';
+  @Input()
+  set clrDgDetailCloseLabel(label: string) {
+    this._detailCloseLabel = label;
+  }
+  get clrDgDetailCloseLabel(): string {
+    return this._detailCloseLabel ? this._detailCloseLabel : this.commonStrings.keys.close;
+  }
+
   /*****
    * property dgCells
    *
@@ -169,7 +199,9 @@ export class ClrDatagridRow<T = any> implements AfterContentInit, AfterViewInit 
   ngAfterContentInit() {
     this.dgCells.changes.subscribe(() => {
       this.dgCells.forEach(cell => {
-        this._scrollableCells.insert(cell._view);
+        if (!cell._view.destroyed) {
+          this._scrollableCells.insert(cell._view);
+        }
       });
     });
   }
@@ -212,11 +244,11 @@ export class ClrDatagridRow<T = any> implements AfterContentInit, AfterViewInit 
 
   public displayCells = false;
 
-  @ViewChild('stickyCells', { static: false, read: ViewContainerRef })
+  @ViewChild('stickyCells', { read: ViewContainerRef })
   _stickyCells: ViewContainerRef;
-  @ViewChild('scrollableCells', { static: false, read: ViewContainerRef })
+  @ViewChild('scrollableCells', { read: ViewContainerRef })
   _scrollableCells: ViewContainerRef;
-  @ViewChild('calculatedCells', { static: false, read: ViewContainerRef })
+  @ViewChild('calculatedCells', { read: ViewContainerRef })
   _calculatedCells: ViewContainerRef;
 
   private wrappedInjector: Injector;

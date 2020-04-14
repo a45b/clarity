@@ -1,54 +1,63 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
-import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, EventEmitter, HostBinding, Input, OnInit, Optional, Output, SkipSelf } from '@angular/core';
-import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
+import { Component, EventEmitter, HostBinding, Inject, Input, OnInit, Optional, Output, SkipSelf } from '@angular/core';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { UNIQUE_ID, UNIQUE_ID_PROVIDER } from '../../utils/id-generator/id-generator.service';
 
 @Component({
   selector: 'clr-stack-block',
   template: `
-    <dt class="stack-block-label"
+    <div class="stack-block-label"
         (click)="toggleExpand()"
         (keyup.enter)="toggleExpand()"
         (keyup.space)="toggleExpand()"
         (focus)="focused = true"
         (blur)="focused = false"
+        [id]="uniqueId"
         [attr.role]="role"
         [attr.tabindex]="tabIndex"
-        [attr.aria-expanded]="ariaExpanded">
+        [attr.aria-expanded]="ariaExpanded"
+        [attr.aria-controls]="getStackChildrenId()"
+        [attr.aria-posinset]="ariaPosinset"
+        [attr.aria-level]="ariaLevel"
+        [attr.aria-setsize]="ariaSetsize"
+        >
       <clr-icon shape="caret"
                 class="stack-block-caret"
                 *ngIf="expandable"
                 [attr.dir]="caretDirection"
                 [attr.title]="caretTitle"></clr-icon>
-      <ng-content select="clr-stack-label"></ng-content>
-    </dt>
-    <dd class="stack-block-content">
-      <ng-content></ng-content>
-    </dd>
-    <!-- FIXME: remove this string concatenation when boolean states are supported -->
-    <div [@collapse]="''+!expanded" class="stack-children" >
-      <ng-content select="clr-stack-block"></ng-content>
+      <span class="clr-sr-only" *ngIf="getChangedValue">{{commonStrings.keys.stackViewChanged}}</span>
+      <div class="stack-view-key">
+        <!-- This structure changed to fix #3567 and the a11y request was to move away from dl's -->
+        <!-- I added the key class to update css targets for the original component style -->
+        <ng-content select="clr-stack-label"></ng-content>
+      </div>
+      <div class="stack-block-content">
+        <ng-content></ng-content>
+      </div>
     </div>
+
+    <clr-expandable-animation [clrExpandTrigger]="expanded" class="stack-children" [attr.id]="getStackChildrenId()">
+      <div [style.height]="expanded ? 'auto' : 0" role="region">
+        <ng-content select="clr-stack-block"></ng-content>
+      </div>
+    </clr-expandable-animation>
   `,
   // Custom elements are inline by default
   styles: [
     `
-        :host { display: block; }
+      :host {
+        display: block;
+      }
     `,
   ],
   // Make sure the host has the proper class for styling purposes
   host: { '[class.stack-block]': 'true' },
-  animations: [
-    trigger('collapse', [
-      state('true', style({ height: 0, display: 'none' })),
-      transition('true => false', [animate('0.2s ease-in-out', style({ height: '*', display: '*' }))]),
-      transition('false => true', [style({ height: '*', display: '*' }), animate('0.2s ease-in-out')]),
-    ]),
-  ],
+  providers: [UNIQUE_ID_PROVIDER],
 })
 export class ClrStackBlock implements OnInit {
   @HostBinding('class.stack-block-expanded')
@@ -82,16 +91,32 @@ export class ClrStackBlock implements OnInit {
     }
   }
 
+  /**
+   * Depth of the stack view starting from 1 for first level
+   */
+  @Input('clrStackViewLevel') ariaLevel: number;
+
+  /**
+   * Total number of rows in a given group
+   */
+  @Input('clrStackViewSetsize') ariaSetsize: number;
+
+  /**
+   * The position of the row inside the grouped by level rows
+   */
+  @Input('clrStackViewPosinset') ariaPosinset: number;
+
   /*
-     * This would be more efficient with @ContentChildren, with the parent ClrStackBlock
-     * querying for children StackBlocks, but this feature is not available when downgrading
-     * the component for Angular 1.
-     */
+   * This would be more efficient with @ContentChildren, with the parent ClrStackBlock
+   * querying for children StackBlocks, but this feature is not available when downgrading
+   * the component for Angular 1.
+   */
   constructor(
     @SkipSelf()
     @Optional()
     private parent: ClrStackBlock,
-    public commonStrings: ClrCommonStrings
+    @Inject(UNIQUE_ID) public uniqueId: string,
+    public commonStrings: ClrCommonStringsService
   ) {
     if (parent) {
       parent.addChild();
@@ -100,7 +125,7 @@ export class ClrStackBlock implements OnInit {
 
   ngOnInit(): void {
     // in order to access the parent ClrStackBlock's properties,
-    // the child ClrStackBlock  has to be fully initialized at first.
+    // the child ClrStackBlock has to be fully initialized at first.
     this._fullyInitialized = true;
   }
 
@@ -120,7 +145,7 @@ export class ClrStackBlock implements OnInit {
   }
 
   get caretTitle(): string {
-    return this.expanded ? this.commonStrings.collapse : this.commonStrings.expand;
+    return this.expanded ? this.commonStrings.keys.collapse : this.commonStrings.keys.expand;
   }
 
   get role(): string {
@@ -142,5 +167,9 @@ export class ClrStackBlock implements OnInit {
     } else {
       return this.expanded ? 'true' : 'false';
     }
+  }
+
+  getStackChildrenId() {
+    return this.expanded ? `clr-stack-children-${this.uniqueId}` : null;
   }
 }

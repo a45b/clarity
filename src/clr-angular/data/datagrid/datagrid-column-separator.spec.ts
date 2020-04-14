@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { Component, DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { DomAdapter } from 'src/clr-angular/utils/dom-adapter/dom-adapter';
+import { DomAdapter } from '../../utils/dom-adapter/dom-adapter';
 
 import { ClrDragAndDropModule } from '../../utils/drag-and-drop/drag-and-drop.module';
 import { ClrDragEvent } from '../../utils/drag-and-drop/drag-event';
@@ -77,6 +77,8 @@ export default function(): void {
 
     afterEach(function() {
       fixture.destroy();
+      const popoverContent = document.querySelectorAll('.clr-popover-content');
+      popoverContent.forEach(content => document.body.removeChild(content));
     });
 
     it('calls showTracker() methods when resizing starts', function() {

@@ -7,6 +7,16 @@
   },
   "list": [
     {
+      "url": "accessibility",
+      "text": "Accessibility",
+      "type": "pattern",
+      "ux": 20,
+      "ui": 20,
+      "core": -1,
+      "ng": -1,
+      "dox": 20
+    },
+    {
       "url": "app-layout",
       "text": "Application Layout",
       "type": "pattern",
@@ -120,6 +130,17 @@
       "core": 20,
       "ng": -1,
       "dox": 20
+    },
+    {
+      "url": "datalist",
+      "text": "Datalist",
+      "type": "component",
+      "ux": 20,
+      "ui": 20,
+      "core": -1,
+      "ng": 20,
+      "dox": 20,
+      "newLayout": true
     },
     {
       "url": "datagrid",
@@ -305,12 +326,22 @@
       "ux": 20,
       "ui": 20,
       "core": -1,
-      "ng": 5,
+      "ng": 20,
       "dox": 20
     },
     {
       "url": "radio",
       "text": "Radio Buttons",
+      "type": "component",
+      "ux": 20,
+      "ui": 20,
+      "core": -1,
+      "ng": 5,
+      "dox": 20
+    },
+    {
+      "url": "range",
+      "text": "Range Input",
       "type": "component",
       "ux": 20,
       "ui": 20,
@@ -367,7 +398,7 @@
       "ux": 20,
       "ui": 20,
       "core": -1,
-      "ng": -1,
+      "ng": 20,
       "dox": 20
     },
     {
@@ -457,6 +488,17 @@
     {
       "url": "tree-view",
       "text": "Tree View",
+      "type": "component",
+      "newLayout": true,
+      "ux": 20,
+      "ui": 20,
+      "core": -1,
+      "ng": 20,
+      "dox": 20
+    },
+    {
+      "url": "timeline",
+      "text": "Timeline",
       "type": "component",
       "newLayout": true,
       "ux": 20,

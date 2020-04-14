@@ -1,5 +1,9 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+# core related files
+*.element.css.ts
+src/clr-core/styles/tokens/generated
+
 # compiled output
 /dist
 /tmp
@@ -8,12 +12,11 @@
 src/clr-angular/.ng_build
 src/clr-angular/.ng_pkg_build
 /tests/tslint/dist
-src/clr-angular/package.json
 
 /reports
 
 # dependencies
-/node_modules
+node_modules
 
 # IDEs and editors
 /.idea
@@ -27,7 +30,7 @@ src/clr-angular/package.json
 
 # IDE - VSCode
 .vscode/*
-# !.vscode/settings.json
+!.vscode/settings.json
 # !.vscode/tasks.json
 # !.vscode/launch.json
 # !.vscode/extensions.json
@@ -41,9 +44,8 @@ src/clr-angular/package.json
 npm-debug.log
 testem.log
 /typings
-/src/clr-angular/package.json
-/src/clr-angular/README.md
 sauceconnect.log
+.env
 
 # e2e
 /e2e/*.js
@@ -58,3 +60,10 @@ auto-generated-news.component.html
 auto-generated-routes.ts
 *.sketch
 *.zip
+
+# cypress
+cypress/screenshots
+cypress/videos
+
+# Local Netlify folder
+.netlify

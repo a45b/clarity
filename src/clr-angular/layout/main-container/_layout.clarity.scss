@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+// Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
 // This software is released under MIT license.
 // The full license information can be found in LICENSE in the root directory of this project.
 
@@ -7,7 +7,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: $clr-global-app-background;
+    @include css-var(background, clr-global-app-background, $clr-global-app-background, $clr-use-custom-properties);
 
     .alert.alert-app-level {
       flex: 0 0 auto;
@@ -46,7 +46,7 @@
       //min-height: 0px works in Firefox but not in IE. IE wants a positive value
       //IE:
       //http://stackoverflow.com/a/14964944/3538394
-      min-height: 1px;
+      min-height: $clr_baselineRem_1px;
 
       .content-area {
         flex: 1 1 auto;

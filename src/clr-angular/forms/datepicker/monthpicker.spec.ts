@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -9,12 +9,11 @@ import { async } from '@angular/core/testing';
 
 import { itIgnore } from '../../../../tests/tests.helpers';
 import { TestContext } from '../../data/datagrid/helpers.spec';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, UP_ARROW } from '../../utils/key-codes/key-codes';
 
 import { DayModel } from './model/day.model';
 import { ClrMonthpicker } from './monthpicker';
-import { DateIOService } from './providers/date-io.service';
 import { DateNavigationService } from './providers/date-navigation.service';
 import { DatepickerFocusService } from './providers/datepicker-focus.service';
 import { LocaleHelperService } from './providers/locale-helper.service';
@@ -42,10 +41,9 @@ export default function() {
         context = this.create(ClrMonthpicker, TestComponent, [
           ViewManagerService,
           DatepickerFocusService,
-          IfOpenService,
+          ClrPopoverToggleService,
           { provide: DateNavigationService, useValue: dateNavigationService },
           LocaleHelperService,
-          DateIOService,
         ]);
         localeHelperService = context.getClarityProvider(LocaleHelperService);
       });
@@ -134,10 +132,9 @@ export default function() {
         context = this.create(ClrMonthpicker, TestComponent, [
           ViewManagerService,
           DatepickerFocusService,
-          IfOpenService,
+          ClrPopoverToggleService,
           { provide: DateNavigationService, useValue: dateNavigationService },
           LocaleHelperService,
-          DateIOService,
         ]);
         localeHelperService = context.getClarityProvider(LocaleHelperService);
       });
@@ -204,10 +201,9 @@ export default function() {
         context = scope.create(ClrMonthpicker, TestComponent, [
           ViewManagerService,
           DatepickerFocusService,
-          IfOpenService,
+          ClrPopoverToggleService,
           { provide: DateNavigationService, useValue: dateNavigationService },
           LocaleHelperService,
-          DateIOService,
         ]);
       }
 

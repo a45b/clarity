@@ -9,9 +9,9 @@
     white-space: nowrap;
 
     select {
-      @include custom-inputs(1rem);
-      @include form-fields-appearance($clr-forms-border-color);
-      @include input-border-bottom-animation($clr-forms-focused-color);
+      @include custom-inputs($clr_baselineRem_1);
+      @include form-fields-appearance();
+      @include input-border-bottom-animation();
       position: relative;
       padding: 0 ($clr-forms-select-caret-size + $clr-forms-baseline * 2) 0 $clr-forms-baseline;
       cursor: pointer;
@@ -23,8 +23,10 @@
 
       &:hover,
       &:active {
-        border-color: $clr-forms-select-hover-background;
-        background: $clr-forms-select-hover-background;
+        $hoverSassVar: $clr-forms-select-hover-background;
+        $hoverCssVar: clr-forms-select-hover-background;
+        @include css-var(border-color, $hoverCssVar, $hoverSassVar, $clr-use-custom-properties);
+        @include css-var(background, $hoverCssVar, $hoverSassVar, $clr-use-custom-properties);
       }
 
       &:disabled {
@@ -32,7 +34,12 @@
       }
 
       option {
-        color: $clr-forms-select-option-color;
+        @include css-var(
+          color,
+          clr-forms-select-option-color,
+          $clr-forms-select-option-color,
+          $clr-use-custom-properties
+        );
       }
     }
 
@@ -49,8 +56,7 @@
     &::after {
       position: absolute;
       content: '';
-      height: $clr-forms-select-caret-size;
-      width: $clr-forms-select-caret-size;
+      @include equilateral($clr-forms-select-caret-size);
       top: ($clr-forms-baseline * 4 - $clr-forms-select-caret-size) / 2;
       right: $clr-forms-baseline;
       // TODO: get rid of generated icons?
@@ -60,7 +66,12 @@
     }
 
     &:hover::after {
-      color: $clr-forms-select-caret-hover-color;
+      @include css-var(
+        color,
+        clr-forms-select-caret-hover-color,
+        $clr-forms-select-caret-hover-color,
+        $clr-use-custom-properties
+      );
     }
   }
 
@@ -79,26 +90,57 @@
   //Multiple Select
   select[multiple],
   select[size] {
+    $multiSassBgVar: $clr-forms-select-multiple-background-color;
+    $multiCssBgVar: clr-forms-select-multiple-background-color;
+    $multiSassBorderVar: $clr-forms-select-multiple-border-color;
+    $multiCssBorderVar: clr-forms-select-multiple-border-color;
     padding: 0;
-    background: $clr-forms-select-multiple-background-color;
-    border: $clr-default-borderwidth solid $clr-forms-select-multiple-border-color;
-    border-radius: $clr-global-borderradius;
+    @include css-var(background, $multiCssBgVar, $multiSassBgVar, $clr-use-custom-properties);
+    border: $clr-global-borderwidth solid;
+    @include css-var(border-color, $multiCssBorderVar, $multiSassBorderVar, $clr-use-custom-properties);
+    @include css-var(border-radius, clr-global-borderradius, $clr-global-borderradius, $clr-use-custom-properties);
     height: auto;
-    min-width: 5rem;
+    min-width: $clr_baselineRem_5;
 
     &:hover,
     &:active {
-      background: $clr-forms-select-multiple-background-color;
-      border-color: $clr-forms-select-multiple-border-color;
+      @include css-var(background, $multiCssBgVar, $multiSassBgVar, $clr-use-custom-properties);
+      @include css-var(border-color, $multiCssBorderVar, $multiSassBorderVar, $clr-use-custom-properties);
     }
     option {
       padding: ($clr-forms-baseline / 2) $clr-forms-baseline;
-      color: $clr-forms-select-multiple-option-color;
+      @include css-var(
+        color,
+        clr-forms-select-multiple-option-color,
+        $clr-forms-select-multiple-option-color,
+        $clr-use-custom-properties
+      );
     }
   }
 
+  .clr-error select:not([multiple]) {
+    @include css-var(
+      border-bottom-color,
+      clr-forms-invalid-color,
+      $clr-forms-invalid-color,
+      $clr-use-custom-properties
+    );
+  }
+
   .clr-error select[multiple] {
-    border-color: $clr-forms-invalid-color;
+    @include css-var(border-color, clr-forms-invalid-color, $clr-forms-invalid-color, $clr-use-custom-properties);
+
+    &:focus {
+      outline: 0;
+      // TODO: this is a mess and will need to be fixed. we shouldn't be using lighten() like this
+      $focus-shadow-color: lighten($clr-forms-invalid-color, 30%);
+      $sass-box-shadow: 0 $clr_baselineRem_1px $clr_baselineRem_3px $focus-shadow-color;
+      $cssvar-box-shadow: 0 $clr_baselineRem_1px $clr_baselineRem_3px
+        var(--clr-forms-select-multiple-error-focus-color, $focus-shadow-color);
+
+      box-shadow: $sass-box-shadow;
+      box-shadow: $cssvar-box-shadow;
+    }
   }
 
   .clr-form-control-disabled .clr-select {
@@ -106,7 +148,12 @@
       @include disabled-form-fields();
 
       &:hover::after {
-        color: $clr-forms-select-caret-color;
+        @include css-var(
+          color,
+          clr-forms-select-caret-color,
+          $clr-forms-select-caret-color,
+          $clr-use-custom-properties
+        );
       }
     }
 
@@ -115,7 +162,7 @@
       @include disabled-form-fields();
       &:hover {
         background: none;
-        border-color: $clr-forms-border-color;
+        @include css-var(border-color, clr-forms-border-color, $clr-forms-border-color, $clr-use-custom-properties);
       }
     }
   }

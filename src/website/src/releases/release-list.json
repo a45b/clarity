@@ -1,6 +1,169 @@
 {
-  "current": "2.0.0",
+  "current": "3.1.0",
   "all": {
+    "3.1.0": {
+      "date": "Apr 2, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "6da155d7f33ca4875748819782bb7053979868d0"
+    },
+    "3.0.1": {
+      "date": "Mar 12, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "da8a565eb73927242676441ab74fda13771c73ff"
+    },
+    "3.0.0": {
+      "date": "Feb 27, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "d452f2f3e606c9394ce7d1f1495802fd7c45cb7c"
+    },
+    "3.0.0-rc.1": {
+      "date": "Feb 21, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "0d7374c71473d0d6eda29899612afaa900de6c3d"
+    },
+    "3.0.0-next.8": {
+      "date": "Feb 8, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "4f2757704664ad5d136432f326b3a241c298d5a2"
+    },
+    "3.0.0-next.7": {
+      "date": "Jan 23, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "93c094e769cb556d8ce2af0230d5fa259f3bb452"
+    },
+    "3.0.0-next.6": {
+      "date": "Jan 9, 2020",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "6ead3ef681168ace68ce5884e85643f8f21e8184"
+    },
+    "3.0.0-next.5": {
+      "date": "Dec 19, 2019",
+      "figma": "2.2.0",
+      "sketch": "",
+      "commit": "c822fc934bd88ba28e9eb8cd3a8b0ca014e4ea36"
+    },
+    "3.0.0-next.4": {
+      "date": "Dec 5, 2019",
+      "sketch": "",
+      "commit": "3be4137e363a40e783067602f70a282a08880555"
+    },
+    "3.0.0-next.3": {
+      "date": "Nov 19, 2019",
+      "figma": "2.2.0",
+      "sketch": ""
+    },
+    "3.0.0-next.2": {
+      "date": "Oct 18, 2019",
+      "figma": "2.2.0",
+      "sketch": ""
+    },
+    "3.0.0-next.1": {
+      "date": "Oct 3, 2019",
+      "figma": "2.2.0",
+      "sketch": ""
+    },
+    "2.4.0": {
+      "date": "Apr 2, 2020",
+      "sketch": "2.2.0",
+      "commit": "2438e3727fd9e36a5cbbc24ae215bebb5e5d18d4"
+    },
+    "2.3.9": {
+      "date": "Mar 12, 2020",
+      "sketch": "2.2.0",
+      "commit": "bc6858a8c3c5ef92532d1e57164ff82947a51d93"
+    },
+    "2.3.8": {
+      "date": "Feb 21, 2020",
+      "sketch": "2.2.0",
+      "commit": "d7154438a29c6166429b92ff1e5c0dc2fd739b09"
+    },
+    "2.3.7": {
+      "date": "Feb 8, 2020",
+      "sketch": "2.2.0",
+      "commit": "1f0623489c35fa0ea540b5af8cc7781820c69a6a"
+    },
+    "2.3.6": {
+      "date": "Jan 23, 2019",
+      "sketch": "2.2.0",
+      "commit": "dee7e82f11037b5b7c2b79619e8d27192c1fa54e"
+    },
+    "2.3.5": {
+      "date": "Jan 9, 2019",
+      "sketch": "2.2.0",
+      "commit": "5ad74e9d2c1501a987539e2accb3748797ba421c"
+    },
+    "2.3.4": {
+      "date": "Dec 19, 2019",
+      "sketch": "2.2.0",
+      "commit": "a8f5989dce8bbf4363f949352a1255a6d01abca0"
+    },
+    "2.3.3": {
+      "date": "Dec 5, 2019",
+      "sketch": "2.2.0",
+      "commit": "acb15e28865276d7a708dfd53303bacd7ee9f43f"
+    },
+    "2.3.2": {
+      "date": "Nov 14, 2019",
+      "sketch": "2.2.0",
+      "commit": "0bbfa656dc2e81c1d89c80ee35c6dc0c44daa396"
+    },
+    "2.3.1": {
+      "date": "Oct 31, 2019",
+      "sketch": "2.2.0",
+      "commit": "84475b93c84c24c83261f69d4ea990a560e7140f"
+    },
+    "2.3.0": {
+      "date": "Oct 18, 2019",
+      "sketch": "2.2.0",
+      "commit": "54ee4b238cea4bda3caaa96e2a3ce4dd9f668a47"
+    },
+    "2.2.2": {
+      "date": "Oct 3, 2019",
+      "sketch": "2.2.0",
+      "commit": "a3142fabb7db4908da4b4163fbe0ab5c9d7f46d8"
+    },
+    "2.2.1": {
+      "date": "Sep 26, 2019",
+      "sketch": "2.2.0",
+      "commit": "5f6fce7ed3e871f0db8f2b557927f63dc2748a0f"
+    },
+    "2.2.0": {
+      "date": "Sep 5, 2019",
+      "sketch": "2.0.0",
+      "commit": "03d0fa7996fc19cdd97ea9ac7e823844623d0c7f"
+    },
+    "2.1.2": {
+      "date": "August 22, 2019",
+      "sketch": "2.0.0",
+      "commit": "6ef996398776ffdfa3ce1e0ad90926261400"
+    },
+    "2.1.1": {
+      "date": "August 8, 2019",
+      "sketch": "2.0.0",
+      "commit": "9f3f32648c5f26cc85606f9bebb92d38e4ba10e0"
+    },
+    "2.1.0": {
+      "date": "Jul 25, 2019",
+      "sketch": "2.0.0",
+      "commit": "daf9fadf839e0bc29133f6b3776e55e0a19bf60d"
+    },
+    "2.0.2": {
+      "date": "Jul 5, 2019",
+      "sketch": "2.0.0",
+      "commit": "d593aa75baaa4b8a8608063fa9598b1e963ac8a4"
+    },
+    "2.0.1": {
+      "date": "June 17, 2019",
+      "sketch": "2.0.0",
+      "commit": "aeba8551bc0d1e39912528686e12577e92f42a96"
+    },
     "2.0.0": {
       "date": "May 23, 2019",
       "sketch": "2.0.0",
@@ -25,6 +188,66 @@
       "date": "Mar 6, 2019",
       "sketch": "2.0.0",
       "commit": ""
+    },
+    "1.3.6": {
+      "date": "Mar 12, 2020",
+      "sketch": "1.0.0",
+      "commit": "ec3865d8443fcd8bb53dc6d55ae1c32073e73180"
+    },
+    "1.3.5": {
+      "date": "Jan 9, 2020",
+      "sketch": "1.0.0",
+      "commit": "4e85270bfe02e93438c5efb5df8e28ff7287b5fd"
+    },
+    "1.3.4": {
+      "date": "Jan 9, 2020",
+      "sketch": "1.0.0",
+      "commit": "b63a5dcbee7fa18ac7485c529b0b634fa51c3a21"
+    },
+    "1.3.3": {
+      "date": "Dec 19, 2019",
+      "sketch": "1.0.0",
+      "commit": "7e94d3b2b7d80cc80fa5d5999a0e6fc8006a6cfb"
+    },
+    "1.3.2": {
+      "date": "Oct 3, 2019",
+      "sketch": "1.0.0",
+      "commit": "4a59c9e9b2d7e1fa725b10a2d0bd05e6af86ae73"
+    },
+    "1.3.1": {
+      "date": "Sep 26, 2019",
+      "sketch": "1.0.0",
+      "commit": "c23dda3d1e7002486d7a438919d0d9d77fd22036"
+    },
+    "1.3.0": {
+      "date": "Sep 5, 2019",
+      "sketch": "1.0.0",
+      "commit": "e9dc2569ea914191441dcdbe49216057c799bc09"
+    },
+    "1.2.2": {
+      "date": "Aug 22, 2019",
+      "sketch": "1.0.0",
+      "commit": "13758277374fec9fbcc0ceb1017bc1c552765408"
+    },
+    "1.2.1": {
+      "date": "Aug 8, 2019",
+      "sketch": "1.0.0",
+      "commit": "6ef996398776ffdfa3ce1e0ad90926261400d88c"
+    },
+    "1.2.0": {
+      "date": "Jul 25, 2019",
+      "sketch": "1.0.0",
+      "commit": "e9e814d8a63787531c793ef3098cf364d75d501a"
+    },
+    "1.1.5": {
+      "date": "Jul 5, 2019",
+      "sketch": "1.0.0",
+      "commit": "558521d6eabd199823f3aaab934001a03405a0d3"
+    },
+    "1.1.4": {
+      "date": "June 17, 2019",
+      "sketch": "1.0.0",
+      "commit": "79ab7f018120d5b96be8cc28aea33c7651ef682e"
     },
     "1.1.3": {
       "date": "Apr 22, 2019",

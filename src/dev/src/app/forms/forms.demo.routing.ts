@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -27,6 +27,10 @@ import { FormsLayoutVerticalAngularDemo } from './layout-angular/layout-vertical
 import { FormsTemplateDrivenDemo } from './template-driven/template-driven';
 import { FormsReactiveDemo } from './reactive/reactive';
 import { FormsResetDemo } from './reset/reset';
+import { FormsA11yDemo } from './a11y/a11y';
+import { FormsLayoutCompactAngularGridDemo } from './layout-angular/layout-compact-angular-grid';
+import { FormsLayoutHorizontalAngularGridDemo } from './layout-angular/layout-horizontal-angular-grid';
+import { FormsGenericContainerDemo } from './generic-container/generic-container';
 
 const ROUTES: Routes = [
   {
@@ -43,6 +47,8 @@ const ROUTES: Routes = [
       { path: 'layout-compact-angular', component: FormsLayoutCompactAngularDemo },
       { path: 'layout-horizontal-angular', component: FormsLayoutHorizontalAngularDemo },
       { path: 'layout-vertical-angular', component: FormsLayoutVerticalAngularDemo },
+      { path: 'layout-horizontal-angular-grid', component: FormsLayoutHorizontalAngularGridDemo },
+      { path: 'layout-compact-angular-grid', component: FormsLayoutCompactAngularGridDemo },
       { path: 'input-group', component: FormsInputGroupDemo },
       { path: 'layout-modal', component: FormsLayoutModalDemo },
       { path: 'checkbox', component: FormsCheckboxDemo },
@@ -54,6 +60,8 @@ const ROUTES: Routes = [
       { path: 'template-driven', component: FormsTemplateDrivenDemo },
       { path: 'reactive', component: FormsReactiveDemo },
       { path: 'reset', component: FormsResetDemo },
+      { path: 'a11y', component: FormsA11yDemo },
+      { path: 'generic-container', component: FormsGenericContainerDemo },
     ],
   },
 ];

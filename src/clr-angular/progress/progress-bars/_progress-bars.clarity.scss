@@ -3,6 +3,7 @@
 // The full license information can be found in LICENSE in the root directory of this project.
 
 @import 'utils/mixins.clarity';
+@import './properties.progress-bars';
 
 @include exports('progress-bars.clarity') {
   // KEY POINTS TO NOTE:
@@ -36,8 +37,8 @@
     height: 2em;
     margin: 0;
     // NOTE: previous measurements based on base font size of 14px; remove this comment once nobody cares...
-    max-height: 0.583333rem;
-    min-height: 0.166667rem;
+    max-height: $clr_baselineRem_0_583;
+    min-height: $clr_baselineRem_4px;
     overflow: hidden;
 
     display: block;
@@ -50,26 +51,20 @@
   .progress {
     > progress {
       @include clr-appearance-normal();
+      @include clr-progress-color($clr-progress-defaultBarColor, clr-progress-default-color);
 
       display: block;
 
-      background-color: $clr-progress-bgColor;
+      @include css-var(background-color, clr-progress-bg-color, $clr-progress-bgColor, $clr-use-custom-properties);
       border: none;
-      // IE10 uses `color` to set the bar background-color
-      color: $clr-progress-defaultBarColor;
-      height: 100%;
-      width: 100%;
-
-      &::-moz-progress-bar {
-        background-color: $clr-progress-defaultBarColor;
-      }
+      @include equilateral(100%);
 
       &[value='0']::-moz-progress-bar {
         // Firefox doesn't allow transition or animation on the progress bar. So it's going to be jumpy for now.
         @include clr-appearance-normal();
 
-        color: $clr-progress-bgColor;
-        min-width: 2rem;
+        @include css-var(color, clr-progress-bg-color, $clr-progress-bgColor, $clr-use-custom-properties);
+        min-width: $clr_baselineRem_2;
         background-color: transparent;
         background-image: none;
       }
@@ -80,8 +75,8 @@
       }
 
       &::-webkit-progress-bar {
-        background-color: $clr-progress-bgColor;
         border-radius: 0;
+        @include css-var(background-color, clr-progress-bg-color, $clr-progress-bgColor, $clr-use-custom-properties);
       }
 
       &::-webkit-progress-inner-element {
@@ -89,7 +84,6 @@
       }
 
       &::-webkit-progress-value {
-        background-color: $clr-progress-defaultBarColor;
         transition: width 0.23s ease-in;
         border-radius: 0;
       }
@@ -98,11 +92,14 @@
 
   // Variations
   .progress {
-    @each $type, $color in (success, $clr-progress-success-color), (warning, $clr-progress-warning-color),
-      (danger, $clr-progress-danger-color)
+    // @deprecated in 3.0
+    /* warning, success, and danger distinctions for progress bars are deprecated in 3.0 */
+    @each $type, $color, $prop in (success, $clr-progress-success-color, clr-progress-alt-color-1),
+      (warning, $clr-progress-warning-color, clr-progress-alt-color-3),
+      (danger, $clr-progress-danger-color, clr-progress-alt-color-2)
     {
       &.#{$type} > progress {
-        @include clr-progress-color($color);
+        @include clr-progress-color($color, $prop);
       }
     }
   }
@@ -177,14 +174,16 @@
     }
   }
 
+  /* flash progress bars are deprecated in 3.0 */
   .progress.flash > progress {
     @extend %clr-progress-animatedTransition;
 
     &[value='100'] {
-      @include clr-progress-color($clr-progress-success-color);
+      @include clr-progress-color($clr-progress-success-color, clr-progress-alt-color-1);
     }
   }
 
+  /* flash progress bars are deprecated in 3.0 */
   .progress.progress-fade.flash > progress[value='100'] {
     &,
     & + span {
@@ -192,11 +191,12 @@
     }
   }
 
+  /* flash-danger progress bars are deprecated in 3.0 */
   .progress.flash-danger > progress {
     @extend %clr-progress-animatedTransition;
 
     &[value='100'] {
-      @include clr-progress-color($clr-progress-danger-color);
+      @include clr-progress-color($clr-progress-danger-color, clr-progress-alt-color-2);
     }
   }
 
@@ -228,17 +228,32 @@
       left: 0;
       position: absolute;
       display: block;
-      background-color: $clr-progress-defaultBarColor;
+      @include css-var(
+        background-color,
+        clr-progress-default-color,
+        $clr-progress-defaultBarColor,
+        $clr-use-custom-properties
+      );
       width: 75%;
     }
 
     &.danger::after,
     &.warning::after {
-      background-color: $clr-progress-danger-color;
+      @include css-var(
+        background-color,
+        clr-progress-alt-color-2,
+        $clr-progress-danger-color,
+        $clr-use-custom-properties
+      );
     }
 
     &.success::after {
-      background-color: $clr-progress-success-color;
+      @include css-var(
+        background-color,
+        clr-progress-alt-color-1,
+        $clr-progress-success-color,
+        $clr-use-custom-properties
+      );
     }
   }
 
@@ -253,7 +268,7 @@
 
     // by default, looping progress bars cannot be labeled.
     & > .progress-meter {
-      background-color: $clr-progress-bgColor;
+      @include css-var(background-color, clr-progress-bg-color, $clr-progress-bgColor, $clr-use-custom-properties);
       display: block;
       position: absolute;
       top: 0;
@@ -262,7 +277,12 @@
       right: 0;
 
       &::before {
-        background-color: $clr-progress-defaultBarColor;
+        @include css-var(
+          background-color,
+          clr-progress-default-color,
+          $clr-progress-defaultBarColor,
+          $clr-use-custom-properties
+        );
         top: 0;
         bottom: 0;
         left: 0;
@@ -485,18 +505,20 @@
       right: 3em;
     }
 
-    @each $type, $color in (success, $clr-progress-success-color), (warning, $clr-progress-warning-color),
-      (danger, $clr-progress-danger-color)
+    /* warning, success, and danger distinctions for progress bars are deprecated in 3.0 */
+    @each $type, $color, $prop in (success, $clr-progress-success-color, clr-progress-alt-color-1),
+      (warning, $clr-progress-warning-color, clr-progress-alt-color-3),
+      (danger, $clr-progress-danger-color, clr-progress-alt-color-2)
     {
       &.#{$type} > .progress-meter::before {
-        background-color: $color;
+        @include css-var(background-color, $prop, $color, $clr-use-custom-properties);
       }
     }
   }
 
   // Inside Cards
 
-  $clr-progressInCard-height: 0.15625rem;
+  $clr-progressInCard-height: $clr_baselineRem_0_15625;
   .card-block,
   .card-footer {
     .progress,
@@ -526,7 +548,7 @@
   }
 
   // Inside Nav Items
-  $clr-progressInNav-height: 0.2rem;
+  $clr-progressInNav-height: $clr_baselineRem_0_2;
   .nav-item {
     .progress,
     .progress-static {
@@ -558,11 +580,11 @@
 
     & > * {
       flex: 0 0 auto;
-      padding-right: 0.5rem;
+      padding-right: $clr_baselineRem_0_5;
       // vertically center???
 
       &:first-child {
-        padding-right: 0.75rem;
+        padding-right: $clr_baselineRem_0_75;
       }
 
       &:last-child {
@@ -598,9 +620,9 @@
     }
   }
 
-  $clr-progressInline__inCard-height: 0.53329167rem;
+  $clr-progressInline__inCard-height: $clr_baselineRem_0_53329167;
   .card-block .progress-block {
-    margin-bottom: 0.5rem;
+    margin-bottom: $clr_baselineRem_0_5;
     padding: 0;
 
     &:last-child {
@@ -609,7 +631,7 @@
 
     & > label {
       max-width: 33%;
-      line-height: 0.75rem;
+      line-height: $clr_baselineRem_0_75;
     }
 
     .progress,

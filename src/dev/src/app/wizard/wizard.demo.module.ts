@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -18,12 +18,16 @@ import { WizardCustomButtonsDemo } from './wizard-custom-buttons.demo';
 import { WizardForceForwardDemo } from './wizard-force-forward.demo';
 import { WizardFormValidation } from './wizard-form-validation.demo';
 import { WizardHeaderActionsDemo } from './wizard-header-actions.demo';
+
+/** @deprecated since 3.0, inline wizard should be removed in 4.0 */
 import { WizardInlineDemo } from './wizard-inline.demo';
+
 import { WizardJumpToDemo } from './wizard-jump-to.demo';
 import { WizardNotClosableDemo } from './wizard-not-closable.demo';
 import { WizardResetDemo } from './wizard-reset.demo';
 import { WizardSkipPageDemo } from './wizard-skip-page.demo';
 import { WizardStopNavigation } from './wizard-stop-navigation.demo';
+import { WizardStepErrorDemo } from './wizard-step-error.demo';
 import { WizardDemo } from './wizard.demo';
 import { ROUTING } from './wizard.demo.routing';
 
@@ -45,6 +49,7 @@ import { ROUTING } from './wizard.demo.routing';
     WizardAltNextDemo,
     WizardForceForwardDemo,
     WizardStopNavigation,
+    WizardStepErrorDemo,
   ],
   exports: [
     WizardBasicDemo,
@@ -62,6 +67,7 @@ import { ROUTING } from './wizard.demo.routing';
     WizardAltNextDemo,
     WizardForceForwardDemo,
     WizardStopNavigation,
+    WizardStepErrorDemo,
   ],
 })
 export class WizardDemoModule {}

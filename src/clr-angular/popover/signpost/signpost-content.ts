@@ -1,15 +1,19 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
-import { Component, ElementRef, Inject, Injector, Input, Optional } from '@angular/core';
+import { Component, ElementRef, Inject, Injector, Input, Optional, OnDestroy, PLATFORM_ID } from '@angular/core';
 
 import { AbstractPopover } from '../common/abstract-popover';
 import { POPOVER_HOST_ANCHOR } from '../common/popover-host-anchor.token';
 
 import { SIGNPOST_POSITIONS } from './signpost-positions';
-import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { UNIQUE_ID, UNIQUE_ID_PROVIDER } from '../../utils/id-generator/id-generator.service';
+import { SignpostIdService } from './providers/signpost-id.service';
+import { SignpostFocusManager } from './providers/signpost-focus-manager.service';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 
 // aka where the arrow / pointer is at in relation to the anchor
 const POSITIONS: string[] = [
@@ -30,39 +34,48 @@ const POSITIONS: string[] = [
 @Component({
   selector: 'clr-signpost-content',
   template: `
-        <div class="signpost-flex-wrap">
-            <div class="popover-pointer"></div>
-            <div class="signpost-content-header">
-                <button type="button" class="signpost-action close" (click)="close()">
-                    <clr-icon shape="close" [attr.title]="commonStrings.close"></clr-icon>
-                </button>
-            </div>
-            <div class="signpost-content-body">
-                <ng-content></ng-content>
-            </div>
-        </div>
-    `,
-  host: { '[class.signpost-content]': 'true' },
+      <div class="signpost-wrap">
+          <div class="popover-pointer"></div>
+          <div class="signpost-content-body">
+              <ng-content></ng-content>
+          </div>
+          <div class="signpost-content-header">
+              <button type="button" [attr.aria-label]="commonStrings.keys.signpostClose" class="signpost-action close"
+                      (click)="close()" [attr.aria-controls]="signpostContentId">
+                  <clr-icon shape="close" [attr.title]="commonStrings.keys.close"></clr-icon>
+              </button>
+          </div>
+      </div>
+  `,
+  host: { '[class.signpost-content]': 'true', '[id]': 'signpostContentId' },
+  providers: [UNIQUE_ID_PROVIDER],
 })
-export class ClrSignpostContent extends AbstractPopover {
+export class ClrSignpostContent extends AbstractPopover implements OnDestroy {
+  private document: Document;
+
   constructor(
     injector: Injector,
     @Optional()
     @Inject(POPOVER_HOST_ANCHOR)
     parentHost: ElementRef,
-    commonStrings: ClrCommonStrings
+    public commonStrings: ClrCommonStringsService,
+    @Inject(UNIQUE_ID) public signpostContentId: string,
+    private signpostIdService: SignpostIdService,
+    private signpostFocusManager: SignpostFocusManager,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) document: any
   ) {
+    super(injector, parentHost);
     if (!parentHost) {
       throw new Error('clr-signpost-content should only be used inside of a clr-signpost');
     }
-    super(injector, parentHost);
-    this.commonStrings = commonStrings;
     // Defaults
     this.position = 'right-middle';
     this.closeOnOutsideClick = true;
-  }
+    this.signpostIdService.setId(signpostContentId);
 
-  commonStrings: ClrCommonStrings;
+    this.document = document;
+  }
 
   /**********
    *
@@ -71,7 +84,7 @@ export class ClrSignpostContent extends AbstractPopover {
    *
    */
   close() {
-    this.ifOpenService.open = false;
+    this.toggleService.open = false;
   }
 
   private _position: string;
@@ -126,5 +139,11 @@ export class ClrSignpostContent extends AbstractPopover {
     this.popoverPoint = setPosition.popoverPoint;
     this.popoverOptions.offsetY = setPosition.offsetY;
     this.popoverOptions.offsetX = setPosition.offsetX;
+  }
+
+  ngOnDestroy() {
+    if (isPlatformBrowser(this.platformId) && this.el.nativeElement.contains(this.document.activeElement)) {
+      this.signpostFocusManager.focusTrigger();
+    }
   }
 }

@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { Component, DebugElement, Injectable, ViewChild } from '@angular/core';
+import { Component, DebugElement, Injectable, Renderer2, ViewChild } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FormControl, FormGroup, FormsModule, NgControl, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -12,7 +12,7 @@ import { By } from '@angular/platform-browser';
 import { itIgnore } from '../../../../tests/tests.helpers';
 import { TestContext } from '../../data/datagrid/helpers.spec';
 import { ClrFormsModule } from '../../forms/forms.module';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { IfErrorService } from '../common/if-error/if-error.service';
 import { ControlClassService } from '../common/providers/control-class.service';
 import { ControlIdService } from '../common/providers/control-id.service';
@@ -29,6 +29,10 @@ import { DatepickerEnabledService } from './providers/datepicker-enabled.service
 import { MockDatepickerEnabledService } from './providers/datepicker-enabled.service.mock';
 import { LocaleHelperService } from './providers/locale-helper.service';
 import { DatepickerFocusService } from './providers/datepicker-focus.service';
+import { ViewManagerService } from './providers/view-manager.service';
+import { ClrPopoverEventsService } from '../../utils/popover/providers/popover-events.service';
+import { ClrPopoverPositionService } from '../../utils/popover/providers/popover-position.service';
+import { LayoutService } from '../common/providers/layout.service';
 
 export default function() {
   describe('Date Input Component', () => {
@@ -49,6 +53,26 @@ export default function() {
       setControl = setControlSpy;
     }
 
+    const DATEPICKER_PROVIDERS: any[] = [
+      ControlClassService,
+      { provide: NgControlService, useClass: MockNgControlService },
+      NgControl,
+      LayoutService,
+      IfErrorService,
+      ClrPopoverToggleService,
+      ClrPopoverEventsService,
+      ClrPopoverPositionService,
+      FocusService,
+      DatepickerFocusService,
+      DateNavigationService,
+      LocaleHelperService,
+      Renderer2,
+      ViewManagerService,
+      DateIOService,
+      ControlIdService,
+      DateFormControlService,
+    ];
+
     describe('Basics', () => {
       beforeEach(function() {
         TestBed.overrideComponent(ClrDateContainer, {
@@ -57,21 +81,7 @@ export default function() {
           },
         });
 
-        context = this.create(ClrDateInput, TestComponent, [
-          ControlClassService,
-          { provide: NgControlService, useClass: MockNgControlService },
-          NgControl,
-          IfErrorService,
-          IfOpenService,
-          FocusService,
-          DatepickerFocusService,
-          DateNavigationService,
-          LocaleHelperService,
-          DateIOService,
-          ControlIdService,
-          DateFormControlService,
-        ]);
-
+        context = this.create(ClrDateInput, TestComponent, DATEPICKER_PROVIDERS);
         enabledService = <MockDatepickerEnabledService>context.fixture.debugElement
           .query(By.directive(ClrDateContainer))
           .injector.get(DatepickerEnabledService);
@@ -151,6 +161,22 @@ export default function() {
           expect(controlClassService.className).toContain('clr-col-12');
           expect(context.clarityElement.className).not.toContain('clr-col-12');
         });
+
+        it('should handle big endien date strings for min inputs', () => {
+          // NOTE: big endian date format is yyyy-mm-dd
+          const testComponent = context.fixture.componentInstance;
+          const [minYear, minMonth, minDay] = testComponent.minDate.split('-').map(n => parseInt(n, 10));
+          const testMinDateModel = new DayModel(minYear, minMonth - 1, minDay);
+          expect(testMinDateModel).toEqual(dateIOService.disabledDates.minDate);
+        });
+
+        it('should handle big endien date strings for max inputs', () => {
+          // NOTE: big endian date format is yyyy-mm-dd
+          const testComponent = context.fixture.componentInstance;
+          const [maxYear, maxMonth, maxDay] = testComponent.maxDate.split('-').map(n => parseInt(n, 10));
+          const testMaxDateModel = new DayModel(maxYear, maxMonth - 1, maxDay);
+          expect(testMaxDateModel).toEqual(dateIOService.disabledDates.maxDate);
+        });
       });
 
       describe('Typescript API', () => {
@@ -162,6 +188,24 @@ export default function() {
         it('does not override placeholder provided by the user', () => {
           context.clarityDirective.placeholder = 'Test';
           expect(context.clarityDirective.placeholderText).toBe('Test');
+        });
+
+        it('sets default values to min/max bounds if not provided by the user', () => {
+          // This is a choice to remove the min/max added to the template for other tests, rather thean creating a completely
+          // new test component
+          delete context.fixture.componentInstance.minDate;
+          delete context.fixture.componentInstance.maxDate;
+          context.fixture.detectChanges();
+          expect(dateIOService.disabledDates.minDate).toEqual(new DayModel(0, 0, 1));
+          expect(dateIOService.disabledDates.maxDate).toEqual(new DayModel(9999, 11, 31));
+        });
+
+        it('sets min/max bounds correctly', () => {
+          context.clarityDirective.min = '2000-05-07';
+          expect(dateIOService.disabledDates.minDate).toEqual(new DayModel(2000, 4, 7));
+
+          context.clarityDirective.max = '2020-05-07';
+          expect(dateIOService.disabledDates.maxDate).toEqual(new DayModel(2020, 4, 7));
         });
 
         it('gets whether the datepicker is enabled or not', () => {
@@ -224,6 +268,17 @@ export default function() {
       });
 
       describe('Date Display', () => {
+        it('displays correct date on mobile in specific timezones', () => {
+          const inputEl: HTMLInputElement = context.testElement.querySelector('input');
+          enabledService.fakeIsEnabled = false;
+          context.detectChanges();
+
+          const userInputDate = '1997-06-22';
+          inputEl.value = userInputDate;
+          inputEl.dispatchEvent(new Event('change'));
+          expect(inputEl.value).toBe(userInputDate);
+        });
+
         it('displays the date on the input when the selectedDay is updated', () => {
           dateNavigationService.notifySelectedDayChanged(new DayModel(2015, 1, 1));
           expect(context.clarityElement.value).toBe('02/01/2015');
@@ -262,6 +317,50 @@ export default function() {
           inputEl.triggerEventHandler('change', inputEl);
 
           expect(context.clarityDirective.onValueChange).toHaveBeenCalled();
+        });
+
+        it('binds to the min attribute', () => {
+          const testComponent = context.fixture.componentInstance;
+          const [minYear, minMonth, minDay] = testComponent.maxDate.split('-').map(n => parseInt(n, 10));
+          const testMinDateModel = new DayModel(minYear, minMonth - 1, minDay);
+          expect(testMinDateModel).toEqual(dateIOService.disabledDates.maxDate);
+
+          // should handle null input
+          testComponent.maxDate = null;
+          context.fixture.detectChanges();
+          expect(testMinDateModel).not.toEqual(dateIOService.disabledDates.maxDate);
+
+          // should handle undefined
+          testComponent.maxDate = undefined;
+          context.fixture.detectChanges();
+          expect(testMinDateModel).not.toEqual(dateIOService.disabledDates.maxDate);
+
+          // should handle empty string
+          testComponent.maxDate = '';
+          context.fixture.detectChanges();
+          expect(testMinDateModel).not.toEqual(dateIOService.disabledDates.maxDate);
+        });
+
+        it('binds to the max attribute', () => {
+          const testComponent = context.fixture.componentInstance;
+          const [maxYear, maxMonth, maxDay] = testComponent.maxDate.split('-').map(n => parseInt(n, 10));
+          const testMaxDateModel = new DayModel(maxYear, maxMonth - 1, maxDay);
+          expect(testMaxDateModel).toEqual(dateIOService.disabledDates.maxDate);
+
+          // should handle null axput
+          testComponent.maxDate = null;
+          context.fixture.detectChanges();
+          expect(testMaxDateModel).not.toEqual(dateIOService.disabledDates.maxDate);
+
+          // should handle undefaxed
+          testComponent.maxDate = undefined;
+          context.fixture.detectChanges();
+          expect(testMaxDateModel).not.toEqual(dateIOService.disabledDates.maxDate);
+
+          // should handle empty straxg
+          testComponent.maxDate = '';
+          context.fixture.detectChanges();
+          expect(testMaxDateModel).not.toEqual(dateIOService.disabledDates.maxDate);
         });
       });
     });
@@ -356,6 +455,40 @@ export default function() {
           expect(dateNavigationService.selectedDay).toEqual(new DayModel(2015, 0, 2));
         })
       );
+    });
+
+    describe('Mobile Datepicker with Reactive Forms', () => {
+      beforeEach(function() {
+        TestBed.configureTestingModule({
+          imports: [ReactiveFormsModule, ClrFormsModule],
+          declarations: [TestComponentWithReactiveForms],
+          providers: [ViewManagerService],
+        });
+
+        TestBed.overrideComponent(ClrDateContainer, {
+          set: {
+            providers: [{ provide: DatepickerEnabledService, useClass: MockDatepickerEnabledService }],
+          },
+        });
+
+        context = this.create(ClrDateInput, TestComponentWithReactiveForms, DATEPICKER_PROVIDERS);
+
+        datepickerFocusService = context.fixture.debugElement.injector.get(DatepickerFocusService);
+        enabledService = <MockDatepickerEnabledService>context.fixture.debugElement
+          .query(By.directive(ClrDateContainer))
+          .injector.get(DatepickerEnabledService);
+      });
+
+      it("date doesn't get deleted when setting it on mobile with a control attached", () => {
+        const input: HTMLInputElement = context.fixture.nativeElement.querySelector('input');
+        enabledService.fakeIsEnabled = false;
+        datepickerFocusService.focusInput(input);
+        context.detectChanges();
+
+        input.value = '1997-06-22';
+        input.dispatchEvent(new Event('change'));
+        expect(input.value).not.toBe('');
+      });
     });
 
     describe('Datepicker with Reactive Forms', () => {
@@ -524,6 +657,18 @@ export default function() {
         dateNavigationService = dateContainerDebugElement.injector.get(DateNavigationService);
       });
 
+      it('when disabled is true there must be attribute attached to the input', () => {
+        fixture.componentInstance.disabled = true;
+        fixture.detectChanges();
+        const datePicker = fixture.nativeElement.querySelector('input');
+        expect(datePicker.getAttribute('disabled')).not.toBeNull();
+
+        // make sure that it won't stay and trick the styles
+        fixture.componentInstance.disabled = false;
+        fixture.detectChanges();
+        expect(datePicker.getAttribute('disabled')).toBeNull();
+      });
+
       it('supports a clrDate Input', () => {
         const date: Date = new Date();
 
@@ -633,12 +778,19 @@ export default function() {
 
 @Component({
   template: `
-        <input type="date" clrDate (clrDateChange)="dateChanged($event)" class="test-class clr-col-12 clr-col-md-8">
+        <input
+                class="test-class clr-col-12 clr-col-md-8"
+                type="date"
+                [min]="minDate"
+                [max]="maxDate"
+                clrDate
+                (clrDateChange)="dateChanged($event)">
     `,
 })
 class TestComponent {
   date: Date;
-
+  minDate = '2019-11-15';
+  maxDate = '2019-11-20';
   dateChanged(date: Date) {
     this.date = date;
   }
@@ -653,17 +805,17 @@ class TestComponent {
 class TestComponentWithNgModel {
   dateValue: string;
 
-  @ViewChild(ClrDateInput, { static: false })
-  dateInputInstance: ClrDateInput;
+  @ViewChild(ClrDateInput) dateInputInstance: ClrDateInput;
 }
 
 @Component({
   template: `
-        <input type="date" [(clrDate)]="date">
+        <input type="date" [(clrDate)]="date" [disabled]="disabled">
     `,
 })
 class TestComponentWithClrDate {
   date: Date;
+  disabled = false;
 }
 
 @Component({
@@ -692,8 +844,7 @@ class TestComponentWithReactiveForms {
     `,
 })
 class TestComponentWithTemplateDrivenForms {
-  @ViewChild('templateForm', { static: false })
-  templateForm: NgForm;
+  @ViewChild('templateForm') templateForm: NgForm;
   dateInput: string = '01/01/2015';
   dateOutput: Date;
 

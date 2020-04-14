@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 
+// tslint:disable no-barrel-imports
 import { POPOVER_HOST_ANCHOR } from '../../../../clr-angular/popover/common/popover-host-anchor.token';
-import { IfOpenService } from '../../../../clr-angular/utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../../../clr-angular/utils/popover/providers/popover-toggle.service';
+// tslint:enable no-barrel-imports
 
 @Component({
   selector: 'clr-dummy-anchor',
@@ -21,18 +23,17 @@ import { IfOpenService } from '../../../../clr-angular/utils/conditional/if-open
         <button class="btn" *ngIf="!openOnFocus" (click)="onClick($event)">Click Trigger</button>
         <ng-content></ng-content>
     `,
-  providers: [IfOpenService, { provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef }],
+  providers: [ClrPopoverToggleService, { provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef }],
 })
 export class DummyAnchor {
-  @ViewChild('ignore', { static: false })
-  ignore: ElementRef;
+  @ViewChild('ignore') ignore: ElementRef;
 
-  constructor(private ifOpenService: IfOpenService) {}
+  constructor(private toggleService: ClrPopoverToggleService) {}
 
   @Input() openOnFocus: boolean = false;
 
   onFocus(event: FocusEvent) {
-    this.ifOpenService.toggleWithEvent(event);
+    this.toggleService.toggleWithEvent(event);
   }
 
   // This needs to be added to handle the case where:
@@ -42,16 +43,16 @@ export class DummyAnchor {
   // Without this, the last step of clicking on the Input while it is focused
   // to open the menu wouldn't work.
   onInputClick(event: MouseEvent) {
-    if (this.ifOpenService.open === false) {
-      this.ifOpenService.toggleWithEvent(event);
+    if (this.toggleService.open === false) {
+      this.toggleService.toggleWithEvent(event);
     }
   }
 
   onFocusOut(event: FocusEvent) {
-    this.ifOpenService.open = false;
+    this.toggleService.open = false;
   }
 
   onClick(event: MouseEvent) {
-    this.ifOpenService.toggleWithEvent(event);
+    this.toggleService.toggleWithEvent(event);
   }
 }

@@ -1,20 +1,16 @@
 /**
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { Component, ContentChild, OnDestroy, Optional } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { NgControl } from '@angular/forms';
+import { Component } from '@angular/core';
 
 import { IfErrorService } from '../common/if-error/if-error.service';
 import { NgControlService } from '../common/providers/ng-control.service';
-import { LayoutService } from '../common/providers/layout.service';
-import { DynamicWrapper } from '../../utils/host-wrapping/dynamic-wrapper';
 import { ControlIdService } from '../common/providers/control-id.service';
-import { ClrLabel } from '../common/label';
 import { ControlClassService } from '../common/providers/control-class.service';
+import { ClrAbstractContainer } from '../common/abstract-container';
 
 @Component({
   selector: 'clr-input-container',
@@ -37,46 +33,4 @@ import { ControlClassService } from '../common/providers/control-class.service';
   },
   providers: [IfErrorService, NgControlService, ControlIdService, ControlClassService],
 })
-export class ClrInputContainer implements DynamicWrapper, OnDestroy {
-  private subscriptions: Subscription[] = [];
-  invalid = false;
-  _dynamic = false;
-  @ContentChild(ClrLabel, { static: false })
-  label: ClrLabel;
-  control: NgControl;
-
-  constructor(
-    private ifErrorService: IfErrorService,
-    @Optional() private layoutService: LayoutService,
-    private controlClassService: ControlClassService,
-    private ngControlService: NgControlService
-  ) {
-    this.subscriptions.push(
-      this.ifErrorService.statusChanges.subscribe(invalid => {
-        this.invalid = invalid;
-      })
-    );
-    this.subscriptions.push(
-      this.ngControlService.controlChanges.subscribe(control => {
-        this.control = control;
-      })
-    );
-  }
-
-  controlClass() {
-    return this.controlClassService.controlClass(this.invalid, this.addGrid());
-  }
-
-  addGrid() {
-    if (this.layoutService && !this.layoutService.isVertical()) {
-      return true;
-    }
-    return false;
-  }
-
-  ngOnDestroy() {
-    if (this.subscriptions) {
-      this.subscriptions.map(sub => sub.unsubscribe());
-    }
-  }
-}
+export class ClrInputContainer extends ClrAbstractContainer {}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -84,6 +84,40 @@ export default function(): void {
 
       it('provides a wrapped view for the content', function() {
         expect(context.clarityDirective._view).toBeDefined();
+      });
+    });
+
+    describe('Conditional selection', function() {
+      let context: TestContext<ClrDatagridRow, SelectableRow>;
+      let selectionProvider: Selection;
+      let checkbox: HTMLElement;
+
+      beforeEach(function() {
+        context = this.create(ClrDatagridRow, SelectableRow, DATAGRID_SPEC_PROVIDERS);
+        selectionProvider = TestBed.get(Selection);
+        TestBed.get(Items).all = [{ id: 1 }, { id: 2 }];
+      });
+
+      it('should toggle when clrDgSelectable is false for type  SelectionType.Multi', () => {
+        selectionProvider.selectionType = SelectionType.Multi;
+        context.testComponent.clrDgSelectable = false;
+        context.detectChanges();
+        checkbox = context.clarityElement.querySelector("input[type='checkbox']");
+
+        expect(checkbox.getAttribute('disabled')).toBe('true');
+        expect(checkbox.getAttribute('aria-disabled')).toBe('true');
+
+        context.clarityDirective.toggle();
+        expect(context.clarityDirective.selected).toBe(true);
+      });
+
+      it('should be able you toggle the state of selection when clrDgSelectable is false', () => {
+        selectionProvider.selectionType = SelectionType.Multi;
+        context.clarityDirective.toggle(true);
+        context.testComponent.clrDgSelectable = false;
+        context.detectChanges();
+        context.clarityDirective.toggle();
+        expect(context.clarityDirective.selected).toBe(false);
       });
     });
 
@@ -319,7 +353,9 @@ export default function(): void {
           expand.expanded = true;
           tick();
           context.detectChanges();
-          const cellStyle = <HTMLElement>context.clarityElement.querySelector('.datagrid-cell:nth-child(2)');
+          const cellStyle = <HTMLElement>context.clarityElement.querySelector(
+            '.datagrid-scrolling-cells > .datagrid-cell'
+          );
           const details = <HTMLElement>context.clarityElement.querySelector('.datagrid-row-detail');
           expect(window.getComputedStyle(cellStyle).display).toBe('none');
           expect(window.getComputedStyle(details).display).toBe('flex');
@@ -332,8 +368,8 @@ export default function(): void {
         fakeAsync(function() {
           expand.expanded = true;
           expand.loading = true;
-          tick();
           context.detectChanges();
+          tick(100);
           expect(context.clarityElement.textContent.trim()).not.toMatch('Detail');
         })
       );
@@ -348,6 +384,21 @@ export default function(): void {
           caret.click();
           flushAnimations();
           expect(expand.expanded).toBe(false);
+        })
+      );
+
+      it(
+        'expands and collapses change the aria-label text aria-expanded',
+        fakeAsync(function() {
+          const caret = context.clarityElement.querySelector('.datagrid-expandable-caret button');
+          caret.click();
+          flushAnimations();
+          expect(caret.getAttribute('aria-label')).toBe(context.testComponent.clrDgDetailCloseLabel);
+          expect(caret.getAttribute('aria-expanded')).toBe('true');
+          caret.click();
+          flushAnimations();
+          expect(caret.getAttribute('aria-label')).toBe(context.testComponent.clrDgDetailOpenLabel);
+          expect(caret.getAttribute('aria-expanded')).toBe('false');
         })
       );
 
@@ -405,6 +456,19 @@ export default function(): void {
         })
       );
 
+      it(
+        'retains its own cells when row detail gets toggled',
+        fakeAsync(function() {
+          expect(context.clarityElement.querySelectorAll('clr-dg-cell').length).toBe(1);
+          context.testComponent.removeRowDetail = true;
+          context.detectChanges();
+          expect(context.clarityElement.querySelectorAll('clr-dg-cell').length).toBe(1);
+          context.testComponent.removeRowDetail = false;
+          context.detectChanges();
+          expect(context.clarityElement.querySelectorAll('clr-dg-cell').length).toBe(1);
+        })
+      );
+
       function flushAnimations() {
         context.detectChanges();
         tick();
@@ -423,6 +487,14 @@ export default function(): void {
 })
 class ProjectionTest {}
 
+@Component({
+  template: `<clr-dg-row [clrDgSelectable]="clrDgSelectable" [clrDgItem]="item">None</clr-dg-row>`,
+})
+class SelectableRow {
+  clrDgSelectable = true;
+  item: Item = { id: 42 };
+}
+
 @Component({ template: `<clr-dg-row [clrDgItem]="item" [(clrDgSelected)]="selected">Hello world</clr-dg-row>` })
 class FullTest {
   item: Item;
@@ -431,13 +503,18 @@ class FullTest {
 
 @Component({
   template: `
-        <clr-dg-row [(clrDgExpanded)]="expanded">
+        <clr-dg-row [(clrDgExpanded)]="expanded" [clrDgDetailOpenLabel]="clrDgDetailOpenLabel" [clrDgDetailCloseLabel]="clrDgDetailCloseLabel">
             <clr-dg-cell>Hello world</clr-dg-cell>
-            <clr-dg-row-detail *clrIfExpanded>
+            <ng-container ngProjectAs="clr-dg-row-detail" *ngIf="!removeRowDetail">
+              <clr-dg-row-detail *clrIfExpanded>
                 Detail
             </clr-dg-row-detail>
+            </ng-container>
         </clr-dg-row>`,
 })
 class ExpandTest {
   expanded = false;
+  clrDgDetailOpenLabel: string = 'Open Me';
+  clrDgDetailCloseLabel: string = 'Close Me';
+  removeRowDetail = false;
 }

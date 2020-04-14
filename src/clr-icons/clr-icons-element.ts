@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -57,11 +57,22 @@ ClarityIconElement.prototype._setIconSize = function(size: string) {
   }
 };
 
+ClarityIconElement.prototype._normalizeShape = function(value: string): string {
+  return value.split(/\s/)[0].toLowerCase();
+};
+
 ClarityIconElement.prototype.connectedCallback = function() {
   // One thing to note here is that the attributeChangedCallback method is called for every attribute first
   // before this connectedCallback method called only once when the custom element is inserted into the DOM.
   // So we could check whether the attribute values really changed or not.
   // If not, we don't need to execute the same codes again.
+
+  // We want to hide the custom element from screen readers but allow the svg/img content to still be read inline
+  // Adding role=none allows the screen reader to skip the custom element as if it were a div or span.
+  // https://www.scottohara.me/blog/2018/05/05/hidden-vs-none.html
+  if (!this.getAttribute('role')) {
+    this.setAttribute('role', 'none');
+  }
 
   if (this.hasAttribute('size')) {
     const sizeAttrValue = this.getAttribute('size');
@@ -77,7 +88,7 @@ ClarityIconElement.prototype.connectedCallback = function() {
   // This means even if the shape is not found, the injected shape will have the user-given size.
 
   if (this.hasAttribute('shape')) {
-    const shapeAttrValue = this.getAttribute('shape').split(/\s/)[0];
+    const shapeAttrValue = this._normalizeShape(this.getAttribute('shape'));
 
     this._shapeTemplateSubscription = ShapeTemplateObserver.instance.subscribeTo(
       shapeAttrValue,
@@ -125,12 +136,12 @@ ClarityIconElement.prototype.attributeChangedCallback = function(
     this._setIconSize(newValue);
   }
 
-  // Note: the size attribute is irrelavent from the shape template;
+  // Note: the size attribute is irrelevant from the shape template;
   // That's why the size checking placed before detecting changes in shape and title attributes.
   // This means even if the shape is not found, the injected shape will have the user-given size.
 
   if (attributeName === 'shape') {
-    this.currentShapeAttrVal = newValue.split(/\s/)[0];
+    this.currentShapeAttrVal = this._normalizeShape(newValue);
 
     // transfer change handler callback to new shape name
     if (this._shapeTemplateSubscription) {
@@ -173,10 +184,13 @@ ClarityIconElement.prototype.disconnectedCallback = function() {
 
 ClarityIconElement.prototype._setAriaLabelledBy = function() {
   const existingAriaLabelledBy: string = this.getAttribute('aria-labelledby');
+  const svgElement: SVGElement = this.querySelector('svg');
+  const elementToSet = svgElement ? svgElement : this;
+
   if (!existingAriaLabelledBy) {
-    this.setAttribute('aria-labelledby', this.clrIconUniqId);
+    elementToSet.setAttribute('aria-labelledby', this.clrIconUniqId);
   } else if (existingAriaLabelledBy && existingAriaLabelledBy.indexOf(this.clrIconUniqId) < 0) {
-    this.setAttribute('aria-labelledby', existingAriaLabelledBy + ' ' + this.clrIconUniqId);
+    elementToSet.setAttribute('aria-labelledby', existingAriaLabelledBy + ' ' + this.clrIconUniqId);
   }
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -9,16 +9,20 @@ import { ClrDatagridPagination } from './datagrid-pagination';
 import { TestContext } from './helpers.spec';
 import { Page } from './providers/page';
 import { StateDebouncer } from './providers/state-debouncer.provider';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { DetailService } from './providers/detail.service';
 
 export default function(): void {
   describe('ClrDatagridPagination component', function() {
     describe('Typescript API', function() {
       let pageService: Page;
       let component: ClrDatagridPagination;
+      let commonStrings: ClrCommonStringsService;
 
       beforeEach(function() {
         pageService = new Page(new StateDebouncer());
-        component = new ClrDatagridPagination(pageService);
+        commonStrings = new ClrCommonStringsService();
+        component = new ClrDatagridPagination(pageService, commonStrings, null);
         component.ngOnInit(); // For the subscription that will get destroyed.
       });
 
@@ -78,6 +82,13 @@ export default function(): void {
         component.ngOnDestroy();
         expect(pageService.size).toBe(0);
       });
+
+      it('does not emit the changes on destroy', () => {
+        spyOn(pageService, 'resetPageSize');
+        pageService.size = 7;
+        component.ngOnDestroy();
+        expect(pageService.resetPageSize).toHaveBeenCalledWith(true);
+      });
     });
 
     describe('Template API', function() {
@@ -85,7 +96,7 @@ export default function(): void {
       let context: TestContext<ClrDatagridPagination, FullTest>;
 
       beforeEach(function() {
-        context = this.create(ClrDatagridPagination, FullTest, [Page, StateDebouncer]);
+        context = this.create(ClrDatagridPagination, FullTest, [Page, DetailService, StateDebouncer]);
       });
 
       it('receives an input for page size', function() {
@@ -114,6 +125,18 @@ export default function(): void {
         context.detectChanges();
         expect(context.testComponent.current).toBe(3);
       });
+
+      it('disables the current page input', function() {
+        context.testComponent.disableCurrentPageInput = true;
+        context.detectChanges();
+        expect(context.clarityDirective.disableCurrentPageInput).toBe(true);
+      });
+
+      it('enables the current page input', function() {
+        context.testComponent.disableCurrentPageInput = false;
+        context.detectChanges();
+        expect(context.clarityDirective.disableCurrentPageInput).toBe(false);
+      });
     });
 
     describe('View', function() {
@@ -121,7 +144,7 @@ export default function(): void {
       let context: TestContext<ClrDatagridPagination, FullTest>;
 
       beforeEach(function() {
-        context = this.create(ClrDatagridPagination, FullTest, [Page, StateDebouncer]);
+        context = this.create(ClrDatagridPagination, FullTest, [Page, DetailService, StateDebouncer]);
       });
 
       it("doesn't display anything if there is only one page", function() {
@@ -308,6 +331,59 @@ export default function(): void {
 
         expect(invalidButton).toBeUndefined();
       });
+
+      it('disables current page input', () => {
+        context.clarityDirective.lastPage = 2;
+        context.testComponent.disableCurrentPageInput = true;
+        context.detectChanges();
+
+        expect(context.clarityDirective.currentPageInputRef).toBeUndefined();
+      });
+
+      it('enables current page input', () => {
+        context.clarityDirective.lastPage = 2;
+        context.testComponent.disableCurrentPageInput = false;
+        context.detectChanges();
+
+        expect(context.clarityDirective.currentPageInputRef).toBeDefined();
+      });
+    });
+
+    describe('Accessibility', function() {
+      // Until we can properly type "this"
+      let context: TestContext<ClrDatagridPagination, FullTest>;
+      let commonStrings: ClrCommonStringsService;
+
+      beforeEach(function() {
+        context = this.create(ClrDatagridPagination, FullTest, [Page, DetailService, StateDebouncer]);
+        commonStrings = new ClrCommonStringsService();
+
+        context.testComponent.size = 10;
+        context.testComponent.total = 100;
+        context.testComponent.current = 10;
+        context.detectChanges();
+      });
+
+      it('expect buttons to have the correct aria-label from ClrCommonStringsService', function() {
+        expect(context.clarityElement.querySelector('.pagination-first').attributes['aria-label'].value).toBe(
+          commonStrings.keys.firstPage
+        );
+        expect(context.clarityElement.querySelector('.pagination-last').attributes['aria-label'].value).toBe(
+          commonStrings.keys.lastPage
+        );
+        expect(context.clarityElement.querySelector('.pagination-previous').attributes['aria-label'].value).toBe(
+          commonStrings.keys.previousPage
+        );
+        expect(context.clarityElement.querySelector('.pagination-next').attributes['aria-label'].value).toBe(
+          commonStrings.keys.nextPage
+        );
+        expect(context.clarityElement.querySelector('.pagination-current').attributes['aria-label'].value).toBe(
+          commonStrings.keys.currentPage
+        );
+        expect(context.clarityElement.querySelector('.pagination-list span').attributes['aria-label'].value).toBe(
+          commonStrings.keys.totalPages
+        );
+      });
     });
   });
 }
@@ -317,7 +393,8 @@ export default function(): void {
                     [(clrDgPage)]="current"
                     [clrDgPageSize]="size"
                     [clrDgTotalItems]="total"
-                    [clrDgLastPage]="last">
+                    [clrDgLastPage]="last"
+                    [clrDgPageInputDisabled]="disableCurrentPageInput">
                 </clr-dg-pagination>`,
 })
 class FullTest {
@@ -327,4 +404,5 @@ class FullTest {
   size: number;
   total: number;
   last: number;
+  disableCurrentPageInput: boolean;
 }

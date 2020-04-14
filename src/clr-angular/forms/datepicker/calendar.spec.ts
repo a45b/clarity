@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
 
 import { itIgnore } from '../../../../tests/tests.helpers';
 import { TestContext } from '../../data/datagrid/helpers.spec';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { DOWN_ARROW, LEFT_ARROW, RIGHT_ARROW, UP_ARROW } from '../../utils/key-codes/key-codes';
 
 import { ClrCalendar } from './calendar';
@@ -35,7 +35,7 @@ export default function() {
       context = this.create(ClrCalendar, TestComponent, [
         { provide: DateNavigationService, useValue: dateNavigationService },
         DateIOService,
-        IfOpenService,
+        ClrPopoverToggleService,
         ViewManagerService,
         LocaleHelperService,
         DatepickerFocusService,
@@ -96,8 +96,8 @@ export default function() {
       });
 
       it('has access to the locale days', () => {
-        expect(context.clarityDirective.localeDaysNarrow).not.toBeNull();
-        expect(context.clarityDirective.localeDaysNarrow.length).toBe(7);
+        expect(context.clarityDirective.localeDays).not.toBeNull();
+        expect(context.clarityDirective.localeDays.length).toBe(7);
       });
 
       // IE doesn't handle KeyboardEvent constructor

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -13,7 +13,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
+// tslint:disable no-barrel-imports
 import { ClarityModule } from '../../clr-angular.module';
+// tslint:enable no-barrel-imports
 import { DisplayModeService } from './providers/display-mode.service';
 import { MockDisplayModeService } from './providers/display-mode.mock';
 import { Selection } from './providers/selection';
@@ -32,6 +34,8 @@ import { IfExpandService } from '../../utils/conditional/if-expanded.service';
 import { DatagridWillyWonka } from './chocolate/datagrid-willy-wonka';
 import { DomAdapter } from '../../utils/dom-adapter/dom-adapter';
 import { DatagridIfExpandService } from './datagrid-if-expanded.service';
+import { DetailService } from './providers/detail.service';
+import { UNIQUE_ID_PROVIDER } from '../../utils/id-generator/id-generator.service';
 
 // Reusable list of providers used in a number of tests
 export const DATAGRID_SPEC_PROVIDERS = [
@@ -52,6 +56,8 @@ export const DATAGRID_SPEC_PROVIDERS = [
   StateDebouncer,
   StateProvider,
   TableSizeService,
+  DetailService,
+  UNIQUE_ID_PROVIDER,
 ];
 
 export class TestContext<D, C> {
@@ -124,7 +130,7 @@ export function addHelpers(): void {
       return (this._context = new TestContext<D, C>(clarityDirective, testComponent));
     };
 
-    this.createWithOverride = <D, C>(
+    this.createWithOverrideComponent = <D, C>(
       clarityDirective: Type<D>,
       testComponent: Type<C>,
       providers: any[] = [],
@@ -136,6 +142,25 @@ export function addHelpers(): void {
         declarations: [testComponent, ...extraDirectives],
         providers: providers,
       }).overrideComponent(clarityDirective, {
+        set: {
+          providers: serviceOverrides,
+        },
+      });
+      return (this._context = new TestContext<D, C>(clarityDirective, testComponent));
+    };
+
+    this.createWithOverrideDirective = <D, C>(
+      clarityDirective: Type<D>,
+      testComponent: Type<C>,
+      providers: any[] = [],
+      extraDirectives: Type<any>[] = [],
+      serviceOverrides: any[]
+    ) => {
+      TestBed.configureTestingModule({
+        imports: [ClarityModule, NoopAnimationsModule],
+        declarations: [testComponent, ...extraDirectives],
+        providers: providers,
+      }).overrideDirective(clarityDirective, {
         set: {
           providers: serviceOverrides,
         },

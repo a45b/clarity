@@ -18,8 +18,10 @@ import { NgControlService } from './providers/ng-control.service';
 @Component({ template: `<label></label>` })
 class NoForTest {}
 
-@Component({ template: `<label for="hello"></label>` })
-class ExplicitForTest {}
+@Component({ template: `<label [for]="forValue"></label>` })
+class ExplicitForTest {
+  forValue = 'hello';
+}
 
 @Component({
   template: `<div><label for="hello"></label></div>`,
@@ -111,6 +113,22 @@ export default function(): void {
       expect(label.classList.contains('clr-col-12')).toBeTrue();
     });
 
+    it('adds the grid classes for non-vertical non-default layouts', function() {
+      TestBed.configureTestingModule({
+        imports: [ClrIconModule],
+        declarations: [ClrLabel, ClrInputContainer, ContainerizedTest],
+        providers: [LayoutService],
+      });
+      const fixture = TestBed.createComponent(ContainerizedTest);
+      const layoutService = fixture.debugElement.injector.get(LayoutService);
+      layoutService.layout = Layouts.HORIZONTAL;
+      layoutService.labelSize = 3;
+      fixture.detectChanges();
+      const label = fixture.nativeElement.querySelector('label');
+      expect(label.classList.contains('clr-col-md-3')).toBeTrue();
+      expect(label.classList.contains('clr-col-12')).toBeTrue();
+    });
+
     it('disables adding the grid classes when manually disabled', function() {
       TestBed.configureTestingModule({
         imports: [ClrIconModule],
@@ -142,6 +160,16 @@ export default function(): void {
       fixture.detectChanges();
       const label = fixture.nativeElement.querySelector('label');
       expect(label.getAttribute('for')).toBe('hello');
+    });
+
+    it('provides a host binding on the for attribute', function() {
+      TestBed.configureTestingModule({ declarations: [ClrLabel, ExplicitForTest], providers: [ControlIdService] });
+      const fixture = TestBed.createComponent(ExplicitForTest);
+      fixture.detectChanges();
+      fixture.componentInstance.forValue = 'updatedFor';
+      fixture.detectChanges();
+      const label = fixture.nativeElement.querySelector('label');
+      expect(label.getAttribute('for')).toBe('updatedFor');
     });
   });
 }

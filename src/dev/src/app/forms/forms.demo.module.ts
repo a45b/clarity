@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -32,9 +32,14 @@ import { FormsLayoutVerticalAngularDemo } from './layout-angular/layout-vertical
 import { FormsTemplateDrivenDemo } from './template-driven/template-driven';
 import { FormsReactiveDemo } from './reactive/reactive';
 import { FormsResetDemo } from './reset/reset';
+import { FormsA11yDemo } from './a11y/a11y';
+import { FormsLayoutHorizontalAngularGridDemo } from './layout-angular/layout-horizontal-angular-grid';
+import { FormsLayoutCompactAngularGridDemo } from './layout-angular/layout-compact-angular-grid';
+import { FormsGenericContainerDemo } from './generic-container/generic-container';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 @NgModule({
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ClarityModule, ROUTING],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ClarityModule, NgSelectModule, ROUTING],
   declarations: [
     FormsDemo,
     FormsInputGroupDemo,
@@ -48,6 +53,8 @@ import { FormsResetDemo } from './reset/reset';
     FormsLayoutCompactAngularDemo,
     FormsLayoutHorizontalAngularDemo,
     FormsLayoutVerticalAngularDemo,
+    FormsLayoutHorizontalAngularGridDemo,
+    FormsLayoutCompactAngularGridDemo,
     FormsTextDemo,
     FormsCheckboxDemo,
     FormsFileDemo,
@@ -57,6 +64,8 @@ import { FormsResetDemo } from './reset/reset';
     FormsTemplateDrivenDemo,
     FormsReactiveDemo,
     FormsResetDemo,
+    FormsA11yDemo,
+    FormsGenericContainerDemo,
   ],
   exports: [
     FormsDemo,
@@ -80,6 +89,8 @@ import { FormsResetDemo } from './reset/reset';
     FormsTemplateDrivenDemo,
     FormsReactiveDemo,
     FormsResetDemo,
+    FormsA11yDemo,
+    FormsGenericContainerDemo,
   ],
 })
 export class FormsDemoModule {}

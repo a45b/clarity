@@ -2,19 +2,33 @@
 // This software is released under MIT license.
 // The full license information can be found in LICENSE in the root directory of this project.
 
+@import './properties.card';
+
 @include exports('card.clarity') {
   %card-border-appearance {
-    box-shadow: $clr-card-box-shadow; //Hardcoded color not in color palette
-    border-radius: $clr-global-borderradius;
-    border: $clr-card-border;
+    // IE/OldEdge
+    box-shadow: $clr-card-box-shadow;
+    @if $clr-use-custom-properties == true {
+      box-shadow: 0 $clr_baselineRem_0_125 0 0 var(--clr-card-box-shadow-color);
+    }
+    @include css-var(border-radius, clr-card-border-radius, $clr-global-borderradius, $clr-use-custom-properties);
+    @include css-var(border-width, clr-card-border-width, $clr-global-borderwidth, $clr-use-custom-properties);
+    border-style: solid;
+    @include css-var(border-color, clr-card-border-color, $clr-card-border-color, $clr-use-custom-properties);
   }
 
   %clickable-card-transition {
-    box-shadow: 0 0.125rem 0 0 rgba(0, 148, 210, 1);
-    border: $clr-default-borderwidth solid rgba(0, 148, 210, 1);
+    // IE/OldEdge
+    box-shadow: 0 $clr_baselineRem_0_125 0 0 $clr-color-action-500;
+    @if $clr-use-custom-properties == true {
+      box-shadow: 0 $clr_baselineRem_0_125 0 0 var(--clr-card-clickable-box-shadow-color);
+    }
+    @include css-var(border-width, clr-card-border-width, $clr-global-borderwidth, $clr-use-custom-properties);
+    border-style: solid;
+    @include css-var(border-color, clr-card-clickable-border-color, $clr-color-action-500, $clr-use-custom-properties);
     cursor: pointer;
     text-decoration: none;
-    transform: translateY(-2px);
+    transform: translateY(-1 * $clr_baselineRem_2px);
     transition: border 0.2s ease, transform 0.2s ease;
   }
 
@@ -39,9 +53,9 @@
   .card {
     position: relative;
     display: block;
-    background-color: $clr-card-bg-color;
+    @include css-var(background-color, clr-card-bg-color, $clr-card-bg-color, $clr-use-custom-properties);
     width: 100%;
-    margin-top: 1rem;
+    margin-top: $clr_baselineRem_1;
     @extend %card-border-appearance;
 
     .btn-link {
@@ -83,10 +97,12 @@
     }
 
     .list-group-item {
-      padding: 0.5rem 0.75rem;
+      padding: $clr_baselineRem_0_5 $clr_baselineRem_0_75;
       font-size: $clr-card-text-font-size;
-      background-color: $clr-card-bg-color;
-      border-bottom: 1px solid $clr-card-border-color;
+      @include css-var(background-color, clr-card-bg-color, $clr-card-bg-color, $clr-use-custom-properties);
+      @include css-var(border-bottom-width, clr-card-border-width, $clr-global-borderwidth, $clr-use-custom-properties);
+      border-bottom-style: solid;
+      @include css-var(border-bottom-color, clr-card-border-color, $clr-card-border-color, $clr-use-custom-properties);
     }
 
     //Dropdowns
@@ -96,7 +112,7 @@
     @include fixForMsEdge() {
       .dropdown > .dropdown-toggle::after {
         display: inline-block;
-        margin-top: -0.5rem;
+        margin-top: -1 * $clr_baselineRem_0_5;
       }
     }
   }
@@ -109,9 +125,9 @@
 
   .card-header,
   .card-title {
-    color: $clr-card-title-color;
+    @include css-var(color, clr-card-title-color, $clr-card-title-color, $clr-use-custom-properties);
+    @include css-var(font-weight, clr-card-title-font-weight, $clr-card-title-font-weight, $clr-use-custom-properties);
     font-size: $clr-card-title-font-size;
-    font-weight: $clr-card-title-font-weight;
     letter-spacing: $clr-card-title-letter-spacing;
   }
 
@@ -122,11 +138,35 @@
   //Images
   .card-img {
     &:first-child > img {
-      border-radius: $clr-global-borderradius $clr-global-borderradius 0 0;
+      border-radius: 0;
+      @include css-var(
+        border-top-left-radius,
+        clr-card-border-radius,
+        $clr-global-borderradius,
+        $clr-use-custom-properties
+      );
+      @include css-var(
+        border-top-right-radius,
+        clr-card-border-radius,
+        $clr-global-borderradius,
+        $clr-use-custom-properties
+      );
     }
 
     &:last-child > img {
-      border-radius: 0 0 $clr-global-borderradius $clr-global-borderradius;
+      border-radius: 0;
+      @include css-var(
+        border-bottom-left-radius,
+        clr-card-border-radius,
+        $clr-global-borderradius,
+        $clr-use-custom-properties
+      );
+      @include css-var(
+        border-bottom-right-radius,
+        clr-card-border-radius,
+        $clr-global-borderradius,
+        $clr-use-custom-properties
+      );
     }
 
     & > img {
@@ -138,7 +178,7 @@
   .card.card-img,
   .card > .card-img:first-child:last-child {
     & > img {
-      border-radius: $clr-global-borderradius;
+      @include css-var(border-radius, clr-card-border-radius, $clr-global-borderradius, $clr-use-custom-properties);
       @extend %card-image-appearance;
     }
   }
@@ -161,7 +201,9 @@
 
   .card-header,
   .card-block {
-    border-bottom: $clr-default-borderwidth solid $clr-card-border-color;
+    @include css-var(border-bottom-width, clr-card-border-width, $clr-global-borderwidth, $clr-use-custom-properties);
+    border-bottom-style: solid;
+    @include css-var(border-bottom-color, clr-card-border-color, $clr-card-border-color, $clr-use-custom-properties);
 
     &:last-child {
       border-bottom: none;
@@ -172,7 +214,9 @@
   //Card dividers should only be used inside of a .card-block
   .card-divider {
     display: block;
-    border-bottom: $clr-default-borderwidth solid $clr-card-divider-color;
+    @include css-var(border-bottom-width, clr-card-border-width, $clr-global-borderwidth, $clr-use-custom-properties);
+    border-bottom-style: solid;
+    @include css-var(border-bottom-color, clr-card-divider-color, $clr-card-divider-color, $clr-use-custom-properties);
   }
 
   .card-block {
@@ -197,19 +241,16 @@
     display: flex;
 
     .card-media-image {
-      $clr-card-media-image-size: 2.5rem;
-      display: inline-block; //to make sure IE10 respects the max-height and max-width
+      $clr-card-media-image-size: $clr_baselineRem_2_5;
+      display: inline-block; //to make sure IE11 respects the max-height and max-width
       flex: 0 0 auto;
-      height: $clr-card-media-image-size;
-      width: $clr-card-media-image-size;
-      max-height: $clr-card-media-image-size;
-      max-width: $clr-card-media-image-size;
+      @include max-equilateral($clr-card-media-image-size);
     }
 
     .card-media-description {
       display: flex;
       flex-direction: column;
-      margin: 0 0 0 0.5rem;
+      margin: 0 0 0 $clr_baselineRem_0_5;
     }
 
     .card-media-title {
@@ -225,7 +266,7 @@
       flex-direction: column;
 
       .card-media-description {
-        margin: 0.25rem 0 0 0;
+        margin: $clr_baselineRem_0_25 0 0 0;
       }
     }
   }
@@ -243,7 +284,7 @@
   @media screen and (min-width: map-get($clr-grid-breakpoints, sm)) {
     .card-columns {
       column-count: 3;
-      column-gap: 0.5rem;
+      column-gap: $clr_baselineRem_0_5;
       break-inside: avoid;
       column-fill: balance;
 
@@ -261,7 +302,7 @@
 
       .card {
         display: inline-block; //For some weird reason stops the cards from getting cut off between 2 columns
-        margin: 0.25rem;
+        margin: $clr_baselineRem_0_25;
       }
 
       .clickable {

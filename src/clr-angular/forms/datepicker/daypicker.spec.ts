@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -7,7 +7,8 @@
 import { Component } from '@angular/core';
 
 import { TestContext } from '../../data/datagrid/helpers.spec';
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
+import { By } from '@angular/platform-browser';
 
 import { ClrDaypicker } from './daypicker';
 import { DayModel } from './model/day.model';
@@ -17,8 +18,61 @@ import { DateNavigationService } from './providers/date-navigation.service';
 import { DatepickerFocusService } from './providers/datepicker-focus.service';
 import { LocaleHelperService } from './providers/locale-helper.service';
 import { ViewManagerService } from './providers/view-manager.service';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { TestBed } from '@angular/core/testing';
+import { ClrAriaLiveService } from '../../utils/a11y/aria-live.service';
+import { MockAriaLiveService } from '../../utils/a11y/aria-live.service.mock';
+import { ClrDatepickerModule } from './datepicker.module';
 
 export default function() {
+  describe('Daypicker Component ClrAriaLiveService', function() {
+    let localeHelperService: LocaleHelperService;
+    let dateNavigationService: DateNavigationService;
+
+    it('updates the aria-live view element when the month and year are changed', () => {
+      dateNavigationService = new DateNavigationService();
+      // Initializing selected day just to make sure that previous and next month tests become easier
+      dateNavigationService.selectedDay = new DayModel(2015, 1, 1);
+      dateNavigationService.initializeCalendar();
+
+      TestBed.configureTestingModule({
+        imports: [ClrDatepickerModule],
+        declarations: [TestComponent],
+        providers: [
+          { provide: DateNavigationService, useValue: dateNavigationService },
+          DateIOService,
+          ClrPopoverToggleService,
+          ViewManagerService,
+          LocaleHelperService,
+          DatepickerFocusService,
+          DateFormControlService,
+          ClrCommonStringsService,
+        ],
+      }).overrideComponent(ClrDaypicker, {
+        set: {
+          providers: [{ provide: ClrAriaLiveService, useClass: MockAriaLiveService }],
+        },
+      });
+
+      const fixture = TestBed.createComponent(TestComponent);
+      const ariaLiveService = fixture.debugElement.query(By.directive(ClrDaypicker)).injector.get(ClrAriaLiveService);
+      const announceSpyOn = spyOn(ariaLiveService, 'announce');
+
+      localeHelperService = fixture.debugElement.query(By.directive(ClrDaypicker)).injector.get(LocaleHelperService);
+      let testMonth = localeHelperService.localeMonthsAbbreviated[dateNavigationService.displayedCalendar.month];
+      let testYear = dateNavigationService.displayedCalendar.year;
+      fixture.detectChanges();
+
+      expect(announceSpyOn).toHaveBeenCalledWith(`The current month is ${testMonth} The current year is ${testYear}`);
+
+      dateNavigationService.selectedDay = new DayModel(2025, 9, 1);
+      fixture.detectChanges();
+      testMonth = localeHelperService.localeMonthsAbbreviated[dateNavigationService.displayedCalendar.month];
+      testYear = dateNavigationService.displayedCalendar.year;
+      expect(announceSpyOn).toHaveBeenCalledWith(`The current month is ${testMonth} The current year is ${testYear}`);
+    });
+  });
+
   describe('Daypicker Component', () => {
     let context: TestContext<ClrDaypicker, TestComponent>;
     let viewManagerService: ViewManagerService;
@@ -34,11 +88,12 @@ export default function() {
       context = this.create(ClrDaypicker, TestComponent, [
         { provide: DateNavigationService, useValue: dateNavigationService },
         DateIOService,
-        IfOpenService,
+        ClrPopoverToggleService,
         ViewManagerService,
         LocaleHelperService,
         DatepickerFocusService,
         DateFormControlService,
+        ClrCommonStringsService,
       ]);
       viewManagerService = context.getClarityProvider(ViewManagerService);
       localeHelperService = context.getClarityProvider(LocaleHelperService);
@@ -100,6 +155,49 @@ export default function() {
         context.detectChanges();
 
         expect(context.clarityDirective.nextMonth).toHaveBeenCalled();
+      });
+
+      it('has correct title and aria-label for monthpicker button', () => {
+        const button: HTMLButtonElement = context.clarityElement.querySelector('.monthpicker-trigger');
+        const currentMonth = localeHelperService.localeMonthsAbbreviated[dateNavigationService.displayedCalendar.month];
+        const expectedString = `Select month, the current month is ${currentMonth}`;
+        expect(button.title).toEqual(expectedString);
+        expect(button.attributes['aria-label'].value).toEqual(expectedString);
+      });
+
+      it('has correct title and aria-label for yearpicker button', () => {
+        const button: HTMLButtonElement = context.clarityElement.querySelector('.yearpicker-trigger');
+        const currentYear = dateNavigationService.displayedCalendar.year;
+        const expectedString = `Select year, the current year is ${currentYear}`;
+        expect(button.title).toEqual(expectedString);
+        expect(button.attributes['aria-label'].value).toEqual(expectedString);
+      });
+
+      it('sets the correct aria-label value on the previous month button', () => {
+        const switchers: HTMLElement = context.clarityElement.querySelector('.calendar-switchers');
+        const previousButton: HTMLButtonElement = <HTMLButtonElement>switchers.children[0];
+        expect(previousButton.attributes['aria-label'].value).toEqual('Previous month');
+      });
+
+      it('sets the correct aria-label value on the current month button', () => {
+        const switchers: HTMLElement = context.clarityElement.querySelector('.calendar-switchers');
+        const currentButton: HTMLButtonElement = <HTMLButtonElement>switchers.children[1];
+        expect(currentButton.attributes['aria-label'].value).toEqual('Current month');
+      });
+
+      it('sets the correct aria-label value on the next month button', () => {
+        const switchers: HTMLElement = context.clarityElement.querySelector('.calendar-switchers');
+        const nextButton: HTMLButtonElement = <HTMLButtonElement>switchers.children[2];
+        expect(nextButton.attributes['aria-label'].value).toEqual('Next month');
+      });
+
+      it('should have text based boundaries for screen readers', () => {
+        const srOnlyElements: HTMLDivElement[] = context.clarityElement.querySelectorAll(
+          '.clr-sr-only:not([aria-live])'
+        );
+
+        expect(srOnlyElements[0].innerText).toBe('Beginning of Modal Content');
+        expect(srOnlyElements[1].innerText).toBe('End of Modal Content');
       });
     });
 

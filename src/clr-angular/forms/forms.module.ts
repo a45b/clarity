@@ -15,6 +15,8 @@ import { ClrPasswordModule } from './password/password.module';
 import { ClrRadioModule } from './radio/radio.module';
 import { ClrSelectModule } from './select/select.module';
 import { ClrTextareaModule } from './textarea/textarea.module';
+import { ClrRangeModule } from './range/range.module';
+import { ClrDatalistModule } from './datalist/datalist.module';
 
 @NgModule({
   imports: [CommonModule],
@@ -27,6 +29,8 @@ import { ClrTextareaModule } from './textarea/textarea.module';
     ClrRadioModule,
     ClrSelectModule,
     ClrTextareaModule,
+    ClrRangeModule,
+    ClrDatalistModule,
   ],
 })
 export class ClrFormsModule {}

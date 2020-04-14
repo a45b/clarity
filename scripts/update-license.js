@@ -17,12 +17,12 @@ const path = require('path');
 const supported = ['.js', '.ts', '.html', '.css', '.scss', '.sass'];
 
 // Grab list of staged files
-const files = exec('git diff --name-only --cached', { encoding: 'utf8' }).split('\n');
+const files = exec('git diff --name-only --cached --diff-filter=d', { encoding: 'utf8' }).split('\n');
 const year = new Date().getFullYear();
 
 files.forEach(file => {
   const filePath = path.join(__dirname, '../', file);
-  if (supported.indexOf(path.extname(filePath)) > -1 && fs.existsSync(filePath)) {
+  if (fs.existsSync(filePath) && supported.indexOf(path.extname(filePath)) > -1) {
     let content = fs.readFileSync(filePath, { encoding: 'utf8' });
     content = content.replace(/\(c\) 2016-(\d\d\d\d)/gim, `(c) 2016-${year}`);
     fs.writeFileSync(filePath, content);

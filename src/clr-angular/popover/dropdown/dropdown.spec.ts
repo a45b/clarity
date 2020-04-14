@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -7,7 +7,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
-import { IfOpenService } from '../../utils/conditional/if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 import { FocusService } from '../../utils/focus/focus.service';
 import { FocusableItem } from '../../utils/focus/focusable-item/focusable-item';
 
@@ -186,7 +186,7 @@ export default function(): void {
     });
 
     it("doesn't close before custom click events have triggered", function() {
-      const ifOpenService = fixture.debugElement.query(By.directive(ClrDropdown)).injector.get(IfOpenService);
+      const toggleService = fixture.debugElement.query(By.directive(ClrDropdown)).injector.get(ClrPopoverToggleService);
 
       const dropdownToggle: HTMLElement = compiled.querySelector('.dropdown-toggle');
       dropdownToggle.click();
@@ -196,7 +196,7 @@ export default function(): void {
       nestedToggle.click();
       fixture.detectChanges();
 
-      subscription = ifOpenService.openChange.subscribe(() => {
+      subscription = toggleService.openChange.subscribe(() => {
         expect(fixture.componentInstance.customClickHandlerDone).toBe(true);
       });
 
@@ -205,7 +205,7 @@ export default function(): void {
       fixture.detectChanges();
 
       // Make sure the dropdown correctly closed, otherwise our expect() in the subscription might not have run.
-      expect(ifOpenService.open).toBe(false);
+      expect(toggleService.open).toBe(false);
     });
 
     it('declares a FocusService provider', () => {
@@ -235,7 +235,7 @@ export default function(): void {
             <clr-dropdown-menu *clrIfOpen>
                 <label class="dropdown-header">Header</label>
                 <a href="javascript://" clrDropdownItem>Item</a>
-                <a href="javascript://" class="disabled" clrDropdownItem>Disabled Item</a>
+                <a href="javascript://" clrDisabled="true" clrDropdownItem>Disabled Item</a>
                 <clr-dropdown>
                     <button clrDropdownTrigger class="nested">Nested</button>
                     <clr-dropdown-menu *clrIfOpen>
@@ -248,8 +248,7 @@ export default function(): void {
     `,
 })
 class TestComponent {
-  @ViewChild(ClrDropdown, { static: false })
-  dropdownInstance: ClrDropdown;
+  @ViewChild(ClrDropdown) dropdownInstance: ClrDropdown;
 
   menuClosable: boolean = true;
   testCnt: number = 0;

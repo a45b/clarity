@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { Component, Directive, NgModule, Type, ViewContainerRef, ElementRef, Renderer2, Injector } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NgControl, FormsModule } from '@angular/forms';
 
@@ -18,6 +18,7 @@ import { IfErrorService } from './if-error/if-error.service';
 import { ControlClassService } from './providers/control-class.service';
 import { MarkControlService } from './providers/mark-control.service';
 import { WrappedFormControl } from './wrapped-control';
+import { LayoutService } from './providers/layout.service';
 
 /*
  * Components using the WrappedFormControl we want to test.
@@ -53,7 +54,14 @@ class TestControl2 extends WrappedFormControl<TestWrapper2> {
 @Component({
   selector: 'test-wrapper3',
   template: `<div id="wrapper"><ng-content></ng-content></div>`,
-  providers: [ControlIdService, MarkControlService, NgControlService, IfErrorService, ControlClassService],
+  providers: [
+    ControlIdService,
+    MarkControlService,
+    NgControlService,
+    IfErrorService,
+    ControlClassService,
+    LayoutService,
+  ],
 })
 class TestWrapper3 implements DynamicWrapper {
   _dynamic = false;
@@ -92,7 +100,7 @@ class WithWrapperWithId {}
 @Component({ template: `<test-wrapper2><input testControl id="hello" /></test-wrapper2>` })
 class WithMultipleNgContent {}
 
-@Component({ template: `<test-wrapper3><input testControl3 [(ngModel)]="model" /><test-wrapper>` })
+@Component({ template: `<test-wrapper3><input testControl3 [(ngModel)]="model" required /><test-wrapper>` })
 class WithControl {
   model = '';
 }
@@ -107,6 +115,7 @@ interface TestContext {
   markControlService?: MarkControlService;
   ngControlService?: NgControlService;
   ifErrorService?: IfErrorService;
+  layoutService?: LayoutService;
 }
 
 export default function(): void {
@@ -128,7 +137,8 @@ export default function(): void {
         testContext.markControlService = wrapperDebugElement.injector.get(MarkControlService);
         testContext.controlClassService = wrapperDebugElement.injector.get(ControlClassService);
         testContext.ngControlService = wrapperDebugElement.injector.get(NgControlService);
-        testContext.ifErrorService = testContext.control.injector.get(IfErrorService);
+        testContext.ifErrorService = wrapperDebugElement.injector.get(IfErrorService);
+        testContext.layoutService = wrapperDebugElement.injector.get(LayoutService);
       } catch (error) {}
     }
 
@@ -226,6 +236,26 @@ export default function(): void {
         setupTest(this, WithControl, TestControl3);
         expect(this.control.ngOnDestroy).toBeDefined();
       });
+    });
+
+    describe('aria roles', function() {
+      it('adds the aria-describedby for helper', function() {
+        setupTest(this, WithControl, TestControl3);
+        expect(this.input.getAttribute('aria-describedby')).toContain('-helper');
+      });
+
+      it(
+        'adds the aria-describedby for error messages',
+        fakeAsync(function(this: TestContext) {
+          setupTest(this, WithControl, TestControl3);
+          this.input.focus();
+          this.input.blur();
+          this.fixture.detectChanges();
+
+          tick();
+          expect(this.input.getAttribute('aria-describedby')).toContain('-error');
+        })
+      );
     });
   });
 }

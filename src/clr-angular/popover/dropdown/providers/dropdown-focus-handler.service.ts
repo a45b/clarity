@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -7,16 +7,15 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, Optional, PLATFORM_ID, Renderer2, SkipSelf } from '@angular/core';
 import { Observable, of, ReplaySubject } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { IfOpenService } from '../../../utils/conditional/if-open.service';
+import { map, take } from 'rxjs/operators';
+import { ClrPopoverToggleService } from '../../../utils/popover/providers/popover-toggle.service';
 import { customFocusableItemProvider } from '../../../utils/focus/focusable-item/custom-focusable-item-provider';
 import { UNIQUE_ID } from '../../../utils/id-generator/id-generator.service';
 import { ArrowKeyDirection } from '../../../utils/focus/arrow-key-direction.enum';
 import { FocusService } from '../../../utils/focus/focus.service';
 import { FocusableItem } from '../../../utils/focus/focusable-item/focusable-item';
-import { linkParent, linkVertical } from '../../../utils/focus/focusable-item/linkers';
+import { Linkers } from '../../../utils/focus/focusable-item/linkers';
 import { wrapObservable } from '../../../utils/focus/wrap-observable';
-import { take } from 'rxjs/operators';
 
 @Injectable()
 export class DropdownFocusHandler implements FocusableItem {
@@ -26,7 +25,7 @@ export class DropdownFocusHandler implements FocusableItem {
     @SkipSelf()
     @Optional()
     private parent: DropdownFocusHandler,
-    private ifOpenService: IfOpenService,
+    private toggleService: ClrPopoverToggleService,
     private focusService: FocusService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -37,12 +36,14 @@ export class DropdownFocusHandler implements FocusableItem {
     }
   }
 
+  private _unlistenFuncs = [];
+
   /**
    * If the dropdown was opened by clicking on the trigger, we automatically move to the first item
    */
   moveToFirstItemWhenOpen() {
-    this.ifOpenService.openChange.subscribe(open => {
-      if (open && this.ifOpenService.originalEvent) {
+    this.toggleService.openChange.subscribe(open => {
+      if (open && this.toggleService.originalEvent) {
         // Even if we properly waited for ngAfterViewInit, the container still wouldn't be attached to the DOM.
         // So setTimeout is the only way to wait for the container to be ready to move focus to first item.
         setTimeout(() => {
@@ -63,16 +64,7 @@ export class DropdownFocusHandler implements FocusableItem {
    * Focus on the menu when it opens, and focus back on the root trigger when the whole dropdown becomes closed
    */
   handleRootFocus() {
-    this.ifOpenService.openChange.subscribe(open => {
-      if (open) {
-        // Even if we properly waited for ngAfterViewInit, the container still wouldn't be attached to the DOM.
-        // So setTimeout is the only way to wait for the container to be ready to focus it.
-        setTimeout(() => {
-          if (this.container && isPlatformBrowser(this.platformId)) {
-            this.container.focus();
-          }
-        });
-      }
+    this.toggleService.openChange.subscribe(open => {
       if (!open) {
         // We reset the state of the focus service both on initialization and when closing.
         this.focusService.reset(this);
@@ -91,12 +83,18 @@ export class DropdownFocusHandler implements FocusableItem {
   }
   set trigger(el: HTMLElement) {
     this._trigger = el;
-    this.renderer.setAttribute(el, 'id', this.id);
+
     if (this.parent) {
-      // The root trigger needs to be in the tab flow, but nested ones are removed like any other dropdown item.
-      this.renderer.setAttribute(el, 'tabindex', '-1');
+      this._unlistenFuncs.push(
+        this.renderer.listen(el, 'keydown.arrowright', event => this.toggleService.toggleWithEvent(event))
+      );
     } else {
-      // The root trigger is the only one outside of the menu, so it needs to its own key listeners.
+      this._unlistenFuncs.push(
+        this.renderer.listen(el, 'keydown.arrowup', event => this.toggleService.toggleWithEvent(event))
+      );
+      this._unlistenFuncs.push(
+        this.renderer.listen(el, 'keydown.arrowdown', event => this.toggleService.toggleWithEvent(event))
+      );
       this.focusService.listenToArrowKeys(el);
     }
   }
@@ -107,46 +105,66 @@ export class DropdownFocusHandler implements FocusableItem {
   }
   set container(el: HTMLElement) {
     this._container = el;
-    if (!this.parent) {
+
+    // whether root container or not, tab key should always toggle (i.e. close) the container
+    this._unlistenFuncs.push(
+      this.renderer.listen(el, 'keydown.tab', event => this.toggleService.toggleWithEvent(event))
+    );
+
+    if (this.parent) {
+      // if it's a nested container, pressing esc has the same effect as pressing left key, which closes the current
+      // popup and moves up to its parent. Here, we stop propagation so that the parent container
+      // doesn't receive the esc keydown
+      this._unlistenFuncs.push(
+        this.renderer.listen(el, 'keydown.esc', event => {
+          this.focusService.move(ArrowKeyDirection.LEFT);
+          event.stopPropagation();
+        })
+      );
+    } else {
       // The root container is the only one we register to the focus service, others do not need focus
       this.focusService.registerContainer(el);
-      // For dropdowns, the menu shouldn't actually be in the tab order. We manually focus it when opening.
-      this.renderer.setAttribute(el, 'tabindex', '-1');
-      // When the user moves focus outside of the menu, we close the dropdown
-      this.renderer.listen(el, 'blur', event => {
-        // we clear out any existing focus on the items
-        this.children.pipe(take(1)).subscribe(items => items.forEach(item => item.blur()));
 
-        // focusout + relatedTarget because a simple blur event would trigger
-        // when the user clicks an item inside of the menu, closing the dropdown.
-        if (event.relatedTarget && isPlatformBrowser(this.platformId)) {
-          if (el.contains(event.relatedTarget) || event.relatedTarget === this.trigger) {
-            return;
+      // The root container will simply close the container when esc key is pressed
+      this._unlistenFuncs.push(
+        this.renderer.listen(el, 'keydown.esc', event => this.toggleService.toggleWithEvent(event))
+      );
+
+      // When the user moves focus outside of the menu, we close the dropdown
+      this._unlistenFuncs.push(
+        this.renderer.listen(el, 'blur', event => {
+          // we clear out any existing focus on the items
+          this.children.pipe(take(1)).subscribe(items => items.forEach(item => item.blur()));
+
+          // event.relatedTarget is null in IE11. In that case we use document.activeElement which correctly points
+          // to the element we want to check. Note that other browsers might point document.activeElement to the
+          // wrong element. This is ok, because all the other browsers we support relies on event.relatedTarget.
+          const target = event.relatedTarget || document.activeElement;
+
+          // If the user clicks on an item which triggers the blur, we don't want to close it since it may open a submenu.
+          // In the case of needing to close it (i.e. user selected an item and the dropdown menu is set to close on
+          // selection), dropdown-item.ts handles it.
+          if (target && isPlatformBrowser(this.platformId)) {
+            if (el.contains(target) || target === this.trigger) {
+              return;
+            }
           }
-        }
-        // We let the user move focus to where the want, we don't force the focus back on the trigger
-        this.focusBackOnTrigger = false;
-        this.ifOpenService.open = false;
-      });
+          // We let the user move focus to where the want, we don't force the focus back on the trigger
+          this.focusBackOnTrigger = false;
+          this.toggleService.open = false;
+        })
+      );
     }
   }
 
   focus() {
-    if (this.trigger) {
-      if (this.parent) {
-        this.renderer.addClass(this.trigger, 'clr-focus');
-      } else if (isPlatformBrowser(this.platformId)) {
-        this.trigger.focus();
-      }
+    if (this.trigger && isPlatformBrowser(this.platformId)) {
+      this.trigger.focus();
     }
   }
   blur() {
-    if (this.trigger) {
-      if (this.parent) {
-        this.renderer.removeClass(this.trigger, 'clr-focus');
-      } else if (isPlatformBrowser(this.platformId)) {
-        this.trigger.blur();
-      }
+    if (this.trigger && isPlatformBrowser(this.platformId)) {
+      this.trigger.blur();
     }
   }
 
@@ -162,10 +180,10 @@ export class DropdownFocusHandler implements FocusableItem {
   up?: Observable<FocusableItem>;
 
   private openAndGetChildren() {
-    return wrapObservable(this.children, () => (this.ifOpenService.open = true));
+    return wrapObservable(this.children, () => (this.toggleService.open = true));
   }
   private closeAndGetThis() {
-    return wrapObservable(of(this), () => (this.ifOpenService.open = false));
+    return wrapObservable(of(this), () => (this.toggleService.open = false));
   }
 
   resetChildren() {
@@ -179,11 +197,16 @@ export class DropdownFocusHandler implements FocusableItem {
   }
 
   addChildren(children: FocusableItem[]) {
-    linkVertical(children);
+    Linkers.linkVertical(children);
     if (this.parent) {
-      linkParent(children, this.closeAndGetThis(), ArrowKeyDirection.LEFT);
+      Linkers.linkParent(children, this.closeAndGetThis(), ArrowKeyDirection.LEFT);
     }
     this.children.next(children);
+  }
+
+  ngOnDestroy() {
+    this._unlistenFuncs.forEach((unlisten: () => void) => unlisten());
+    this.focusService.detachListeners();
   }
 }
 

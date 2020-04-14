@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -27,6 +27,7 @@ import { NgModelAutoWrappedDatepickerDemo } from './ngmodel-auto-wrapped';
 import { NgModelExplicitWrapperDemo } from './ngmodel-wrapper-explicit-wrapper';
 import { DisabledDemo } from './disabled';
 import { DatepickerLayoutDemo } from './layout';
+import { DatepickerMinMaxDemo } from './datepicker-min-max';
 
 @NgModule({
   imports: [CommonModule, ClarityModule, ROUTING, FormsModule, ReactiveFormsModule],
@@ -48,6 +49,7 @@ import { DatepickerLayoutDemo } from './layout';
     DatepickerLocaleData,
     DisabledDemo,
     DatepickerLayoutDemo,
+    DatepickerMinMaxDemo,
   ],
   exports: [
     DatepickerDemo,
@@ -67,6 +69,7 @@ import { DatepickerLayoutDemo } from './layout';
     DatepickerLocaleData,
     DisabledDemo,
     DatepickerLayoutDemo,
+    DatepickerMinMaxDemo,
   ],
 })
 export class DatepickerDemoModule {}

@@ -23,13 +23,13 @@ import { DomAdapter } from '../../dom-adapter/dom-adapter';
   ],
   animations: [
     trigger('expandAnimation', [
-      transition('void => *', []),
-      transition('* => *', [
+      transition('true <=> false', [
         style({ height: '{{startHeight}}px', overflow: 'hidden' }),
         animate('0.2s ease-in-out', style({ height: '*' })),
       ]),
     ]),
   ],
+  providers: [DomAdapter],
 })
 export class ClrExpandableAnimation {
   @Input() clrExpandTrigger: any;

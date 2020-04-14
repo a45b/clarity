@@ -12,23 +12,23 @@
             <clr-icon shape="caret down"></clr-icon>
         </button>
         <clr-dropdown-menu>
-            <label class="dropdown-header">Dropdown header</label>
-            <a href="javascript://" clrDropdownItem>Action 1</a>
-            <a href="javascript://" class="disabled" clrDropdownItem>Disabled Action</a>
-            <div class="dropdown-divider"></div>
+            <label class="dropdown-header" aria-hidden="true">Dropdown header</label>
+            <div aria-label="Drowpdown header Action 1" clrDropdownItem>Action 1</div>
+            <div aria-label="Drowpdown header Disabled Action" clrDropdownItem clrDisabled>Disabled Action</div>
+            <div class="dropdown-divider" role="separator" aria-hidden="true"></div>
             <clr-dropdown>
                 <button clrDropdownTrigger [id]="'sub-menu-1'">Link 1</button>
                 <clr-dropdown-menu>
-                    <a href="javascript://" clrDropdownItem>Foo</a>
+                    <div clrDropdownItem>Foo</div>
                     <clr-dropdown>
                         <button clrDropdownTrigger [id]="'sub-menu-2'">Bar</button>
                         <clr-dropdown-menu clrPosition="left-bottom">
-                            <a href="javascript://" clrDropdownItem>Baz</a>
+                            <div clrDropdownItem>Baz</div>
                         </clr-dropdown-menu>
                     </clr-dropdown>
                 </clr-dropdown-menu>
             </clr-dropdown>
-            <a href="javascript://" clrDropdownItem>Link 2</a>
+            <div clrDropdownItem>Link 2</div>
         </clr-dropdown-menu>
     </clr-dropdown>
 </div>
@@ -40,23 +40,23 @@
             <clr-icon shape="caret down"></clr-icon>
         </button>
         <clr-dropdown-menu *clrIfOpen>
-            <label class="dropdown-header">Dropdown header</label>
-            <a href="javascript://" clrDropdownItem>Action 1</a>
-            <a href="javascript://" class="disabled" clrDropdownItem>Disabled Action</a>
-            <div class="dropdown-divider"></div>
+            <label class="dropdown-header" aria-hidden="true">Dropdown header</label>
+            <div aria-label="Drowpdown header Action 1"clrDropdownItem>Action 1</div>
+            <div aria-label="Drowpdown header Disabled Action" clrDropdownItem clrDisabled>Disabled Action</div>
+            <div class="dropdown-divider" role="separator" aria-hidden="true"></div>
             <clr-dropdown>
                 <button clrDropdownTrigger [id]="'sub-menu-3'">Link 1</button>
                 <clr-dropdown-menu *clrIfOpen>
-                    <a href="javascript://" clrDropdownItem>Foo</a>
+                    <div clrDropdownItem>Foo</div>
                     <clr-dropdown>
                         <button clrDropdownTrigger [id]="'sub-menu-4'">Bar</button>
                         <clr-dropdown-menu clrPosition="left-bottom" *clrIfOpen>
-                            <a href="javascript://" clrDropdownItem>Baz</a>
+                            <div clrDropdownItem>Baz</div>
                         </clr-dropdown-menu>
                     </clr-dropdown>
                 </clr-dropdown-menu>
             </clr-dropdown>
-            <a href="javascript://" clrDropdownItem>Link 2</a>
+            <div clrDropdownItem>Link 2</div>
         </clr-dropdown-menu>
     </clr-dropdown>
 </div>

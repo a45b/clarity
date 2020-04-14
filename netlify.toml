@@ -1,12 +1,27 @@
 # Default build settings
 [build]
-  command = "npm run website:prerender"
+  command = "npm run website:render"
   functions = "dist/netlify"
-  publish = "dist/website/browser"
-
-[build.environment]
-  NPM_FLAG = "--progress=false --quiet"
+  publish = "dist/website"
+  environment = { CI = "true", NPM_FLAGS = '--no-optional', CYPRESS_INSTALL_BINARY = "false" }
 
 # Override for PRs to deploy the dev app
 [context.deploy-preview]
-  command = "npm run build:preview && npm run website:news && npm run website:deploy-preview && npm run api:build && cp -R dist/dev dist/website/browser/dev"
+  command = "npm run build:libs && npm run angular:dev:preview && npm run website:build && cp -R dist/dev dist/website/dev"
+
+# Redirect support for storybook demo
+[[redirects]]
+  from = "/storybook/core/*"
+  to = "/storybook/core"
+  status = 200
+
+# Handle 404s in our app, SPA redirect config
+[[redirects]]
+  from = "/*"
+  to = "/"
+  status = 200
+
+[[headers]]
+  for = "/*.json"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"

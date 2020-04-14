@@ -1,20 +1,11 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { CalendarModel } from './calendar.model';
-
 export class DayModel {
   constructor(public readonly year: number, public readonly month: number, public readonly date: number) {}
-
-  /**
-   * Returns the Calendar for the current DayModel.
-   */
-  get calendar(): CalendarModel {
-    return new CalendarModel(this.year, this.month);
-  }
 
   /**
    * Checks if the passed CalendarDate is equal to itself.
@@ -26,9 +17,6 @@ export class DayModel {
     return false;
   }
 
-  /**
-   * Converts the CalendarDate into the Javascript Date object.
-   */
   toDate(): Date {
     return new Date(this.year, this.month, this.date);
   }
@@ -49,5 +37,17 @@ export class DayModel {
    */
   clone(): DayModel {
     return new DayModel(this.year, this.month, this.date);
+  }
+
+  toComparisonString(): string {
+    return `${this.year}${this.pad(this.month)}${this.pad(this.date)}`;
+  }
+
+  private pad(num: number): string {
+    return num < 10 ? `0${num}` : `${num}`;
+  }
+
+  public toDateString(): string {
+    return this.toDate().toLocaleDateString();
   }
 }

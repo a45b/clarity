@@ -2,6 +2,8 @@
 // This software is released under MIT license.
 // The full license information can be found in LICENSE in the root directory of this project.
 
+@import './properties.signpost';
+
 @include exports('signpost.clarity') {
   .signpost {
     display: inline-block;
@@ -11,25 +13,28 @@
     }
 
     .signpost-action {
-      min-width: 1rem;
+      min-width: $clr_baselineRem_1;
       margin: 0;
       padding: 0;
-      color: $clr-signpost-action-color;
+      @include css-var(color, clr-signpost-action-color, $clr-signpost-action-color, $clr-use-custom-properties);
 
       clr-icon {
-        width: 1rem;
-        height: 1rem;
+        @include equilateral($clr_baselineRem_1);
       }
 
       &:hover,
       &.active {
-        color: $clr-signpost-action-hover-color;
+        @include css-var(
+          color,
+          clr-signpost-action-hover-color,
+          $clr-signpost-action-hover-color,
+          $clr-use-custom-properties
+        );
       }
     }
 
     .signpost-content-header button clr-icon {
-      width: 0.666667rem;
-      height: 0.666667rem;
+      @include equilateral($clr_baselineRem_0_667);
     }
   }
 
@@ -41,24 +46,25 @@
 
   .signpost-content {
     background-color: transparent;
-    min-width: 9rem;
-    max-width: 15rem;
-    // previous min-height of 3.5rem was too much for small signposts like in datagrid hide-show demo
-    min-height: 2rem;
-    max-height: 21rem;
+    min-width: $clr_baselineRem_9;
+    max-width: $clr_baselineRem_15;
+    min-height: $clr_baselineRem_2;
+    max-height: $clr_baselineRem_21;
     display: inline-block;
     position: relative;
     z-index: map-get($clr-layers, tooltips);
 
+    &:hover {
+      cursor: default;
+    }
+
     .popover-pointer {
-      width: 0;
-      height: 0;
+      @include equilateral(0);
       position: absolute;
 
       &:before {
         content: '';
-        width: 0;
-        height: 0;
+        @include equilateral(0);
         position: absolute;
       }
     }
@@ -93,23 +99,23 @@
 
         &:before {
           border-top: $clr-signpost-pointer-psuedo-border;
-          bottom: 2px;
+          bottom: $clr_baselineRem_2px;
         }
       }
     }
 
     &.top-left {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-bottom-right-radius: 0; // Turn off rounded corner here
       }
 
       .popover-pointer {
         border-left: $clr-signpost-pointer-invisible-border;
-        right: 0;
+        right: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-left: $clr-signpost-pointer-invisible-border;
-          right: 1px;
+          right: $clr_baselineRem_1px;
         }
       }
     }
@@ -121,23 +127,23 @@
 
         &:before {
           border-right: $clr-signpost-pointer-invisible-border;
-          left: 1px;
+          left: $clr_baselineRem_1px;
         }
       }
     }
 
     &.top-right {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-bottom-left-radius: 0; // Turn off rounded corner here
       }
 
       .popover-pointer {
         border-right: $clr-signpost-pointer-invisible-border;
-        left: 0;
+        left: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-right: $clr-signpost-pointer-invisible-border;
-          left: 1px;
+          left: $clr_baselineRem_1px;
         }
       }
     }
@@ -152,27 +158,27 @@
     &.bottom-right {
       .popover-pointer {
         border-bottom: $clr-signpost-pointer-border;
-        top: calc(#{-1 * $clr-signpost-border-size} + 1px);
+        top: -1 * $clr-signpost-border-size + $clr_baselineRem_1px;
 
         &:before {
           border-bottom: $clr-signpost-pointer-psuedo-border;
-          top: 2px;
+          top: $clr_baselineRem_2px;
         }
       }
     }
 
     &.bottom-left {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-top-right-radius: 0; // Turn off rounded corners here
       }
 
       .popover-pointer {
         border-left: $clr-signpost-pointer-invisible-border;
-        right: 0;
+        right: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-left: $clr-signpost-pointer-invisible-border;
-          right: 1px;
+          right: $clr_baselineRem_1px;
         }
       }
     }
@@ -184,23 +190,23 @@
 
         &:before {
           border-right: $clr-signpost-pointer-invisible-border;
-          right: calc(#{-1 * $clr-signpost-border-size} - 1px);
+          right: -1 * $clr-signpost-border-size - $clr_baselineRem_1px;
         }
       }
     }
 
     &.bottom-right {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-top-left-radius: 0; // Turn off rounded corners here
       }
 
       .popover-pointer {
         border-right: $clr-signpost-pointer-invisible-border;
-        left: 0;
+        left: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-right: $clr-signpost-pointer-invisible-border;
-          left: 1px;
+          left: $clr_baselineRem_1px;
         }
       }
     }
@@ -224,18 +230,18 @@
     }
 
     &.left-top {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-bottom-right-radius: 0; // Turn off rounded corners here
       }
 
       .popover-pointer {
         border-top: $clr-signpost-pointer-invisible-border;
-        bottom: 0;
+        bottom: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-top: $clr-signpost-pointer-invisible-border;
-          top: calc(#{-1 * $clr-signpost-border-size} - 1px);
-          right: 2px;
+          top: -1 * $clr-signpost-border-size - $clr_baselineRem_1px;
+          right: $clr_baselineRem_2px;
         }
       }
     }
@@ -248,25 +254,25 @@
 
         &:before {
           border-bottom: $clr-signpost-pointer-invisible-border;
-          top: 1px;
-          left: calc(#{-1 * $clr-signpost-border-size} - 2px);
+          top: $clr_baselineRem_1px;
+          left: -1 * $clr-signpost-border-size - $clr_baselineRem_2px;
         }
       }
     }
 
     &.left-bottom {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-top-right-radius: 0; // Turn off rounded corners here
       }
 
       .popover-pointer {
         border-bottom: $clr-signpost-pointer-invisible-border;
-        top: 0;
+        top: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-bottom: $clr-signpost-pointer-invisible-border;
-          top: 1px;
-          left: calc(#{-1 * $clr-signpost-border-size} - 2px);
+          top: $clr_baselineRem_1px;
+          left: -1 * $clr-signpost-border-size - $clr_baselineRem_2px;
         }
       }
     }
@@ -285,23 +291,23 @@
 
         &:before {
           border-right: $clr-signpost-pointer-psuedo-border;
-          left: 2px;
+          left: $clr_baselineRem_2px;
         }
       }
     }
 
     &.right-top {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-bottom-left-radius: 0; // turn off rounded corner here
       }
 
       .popover-pointer {
         border-top: $clr-signpost-pointer-invisible-border;
-        bottom: 0;
+        bottom: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-top: $clr-signpost-pointer-invisible-border;
-          top: calc(#{-1 * $clr-signpost-border-size} - 1px);
+          top: -1 * $clr-signpost-border-size - $clr_baselineRem_1px;
         }
       }
     }
@@ -314,23 +320,23 @@
 
         &:before {
           border-bottom: $clr-signpost-pointer-invisible-border;
-          top: 1px;
+          top: $clr_baselineRem_1px;
         }
       }
     }
 
     &.right-bottom {
-      .signpost-flex-wrap {
+      .signpost-wrap {
         border-top-left-radius: 0; // turn off rounded corner here
       }
 
       .popover-pointer {
         border-bottom: $clr-signpost-pointer-invisible-border;
-        top: 0;
+        top: (-1 * $clr_baselineRem_1px);
 
         &:before {
           border-bottom: $clr-signpost-pointer-invisible-border;
-          top: 1px;
+          top: $clr_baselineRem_1px;
         }
       }
     }
@@ -340,22 +346,40 @@
   .signpost-content-header {
     display: flex;
     justify-content: flex-end;
-    flex: 0 0 1rem;
+    position: absolute;
+    width: 100%;
+    background-color: inherit;
+    top: 0;
   }
 
-  .signpost-flex-wrap {
-    border: $clr-default-borderwidth solid $clr-signpost-outerBorder;
-    border-radius: $clr-signpost-border-radius;
-    background-color: $clr-signpost-innerBlock;
-    display: flex;
-    flex-direction: column;
+  .signpost-wrap {
+    @include css-var(
+      border-radius,
+      clr-signpost-border-radius,
+      $clr-signpost-border-radius,
+      $clr-use-custom-properties
+    );
+    @include css-var(border-width, clr-global-borderwidth, $clr-global-borderwidth, $clr-use-custom-properties);
+    border-style: solid;
+    @include css-var(
+      border-color,
+      clr-signpost-content-border-color,
+      $clr-signpost-content-border-color,
+      $clr-use-custom-properties
+    );
+    @include css-var(
+      background-color,
+      clr-signpost-content-bg-color,
+      $clr-signpost-content-bg-color,
+      $clr-use-custom-properties
+    );
     z-index: map-get($clr-layers, tooltips);
+    position: relative;
   }
 
   .signpost-content-body {
-    flex: 1 1 auto;
-    padding: 0 1rem 1rem;
-    max-height: 20rem;
+    padding: $clr_baselineRem_1;
+    max-height: $clr_baselineRem_20;
     overflow-y: auto;
   }
 }

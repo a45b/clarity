@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -13,21 +13,27 @@ import { ClrWizardPage } from './wizard-page';
 @Component({
   selector: '[clr-wizard-stepnav-item]',
   template: `
-        <button type="button" class="btn btn-link clr-wizard-stepnav-link" (click)="click()">
-            <ng-template [ngTemplateOutlet]="page.navTitle"></ng-template>
+        <button type="button" class="btn btn-link clr-wizard-stepnav-link" (click)="click()" [attr.disabled]="isDisabled ? '' : null">
+            <span class="clr-wizard-stepnav-link-suffix">
+              <clr-icon shape="error-standard" class="is-error clr-wizard-stepnav-item-error-icon" *ngIf="hasError"></clr-icon>
+              <ng-content *ngIf="!hasError"></ng-content>              
+            </span>
+            <span class="clr-wizard-stepnav-link-title">
+              <ng-template [ngTemplateOutlet]="page.navTitle"></ng-template> 
+            </span>
         </button>
     `,
   host: {
     '[id]': 'id',
     '[attr.aria-selected]': 'isCurrent',
     '[attr.aria-controls]': 'id',
-    role: 'tab',
     '[class.clr-nav-link]': 'true',
     '[class.nav-item]': 'true',
     '[class.active]': 'isCurrent',
     '[class.disabled]': 'isDisabled',
     '[class.no-click]': '!canNavigate',
     '[class.complete]': 'isComplete',
+    '[class.error]': 'hasError',
   },
 })
 export class ClrWizardStepnavItem {
@@ -59,6 +65,11 @@ export class ClrWizardStepnavItem {
   public get isComplete(): boolean {
     this.pageGuard();
     return this.page.completed;
+  }
+
+  public get hasError(): boolean {
+    this.pageGuard();
+    return this.page.hasError && this.isComplete;
   }
 
   public get canNavigate(): boolean {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -57,7 +57,7 @@ export class ClrTabLink {
     public ifActiveService: IfActiveService,
     @Inject(IF_ACTIVE_ID) private id: number,
     private ariaService: AriaService,
-    private el: ElementRef,
+    public el: ElementRef,
     private cfr: ComponentFactoryResolver,
     private viewContainerRef: ViewContainerRef,
     private tabsService: TabsService,
@@ -71,7 +71,7 @@ export class ClrTabLink {
     // Here, we create a container so that its template can be used to create embeddedView on the fly.
     // See TabsService's renderView() method and how it's used in Tabs class for an example.
     const factory = this.cfr.resolveComponentFactory(TemplateRefContainer);
-    this.templateRefContainer = this.viewContainerRef.createComponent(factory, 1, undefined, [
+    this.templateRefContainer = this.viewContainerRef.createComponent(factory, undefined, undefined, [
       [this.el.nativeElement],
     ]).instance;
   }
@@ -100,5 +100,10 @@ export class ClrTabLink {
   @HostBinding('attr.aria-selected')
   get active() {
     return this.ifActiveService.current === this.id;
+  }
+
+  @HostBinding('attr.tabindex')
+  get tabindex() {
+    return this.active ? 0 : -1;
   }
 }

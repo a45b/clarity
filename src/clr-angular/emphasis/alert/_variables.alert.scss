@@ -26,16 +26,16 @@ $clr-alert-letter-spacing: $clr-p3-letter-spacing !default;
 
 // Dimensions & Layout
 // Usage: ./_alert.clarity.scss
-$clr-icon-margin-right: 0.25rem !default;
-$clr-icon-dimension-sm: 0.666667rem !default;
-$clr-alert-icon-dimension-sm: 0.75rem !default;
-$clr-alert-top-margin: 0.25rem !default;
-$clr-alert-min-height: 1.5rem !default;
-$clr-alert-horizontal-padding: 0.5rem !default;
-$clr-alert-top-padding: 0.125rem !default;
-$clr-alert-bottom-padding: 0.375rem !default;
+$clr-icon-margin-right: $clr_baselineRem_0_25 !default;
+$clr-icon-dimension-sm: $clr_baselineRem_0_667 !default;
+$clr-alert-icon-dimension-sm: $clr_baselineRem_0_75 !default;
+$clr-alert-top-margin: $clr_baselineRem_0_25 !default;
+$clr-alert-min-height: $clr_baselineRem_1_5 !default;
+$clr-alert-horizontal-padding: $clr_baselineRem_0_5 !default;
+$clr-alert-top-padding: $clr_baselineRem_0_125 !default;
+$clr-alert-bottom-padding: $clr_baselineRem_0_375 !default;
 $clr-alert-item-min-height: $clr-alert-icon-dimension-sm !default;
-$clr-alert-borderwidth: $clr-default-borderwidth !default;
+$clr-alert-borderwidth: $clr-global-borderwidth !default;
 $clr-alert-borderradius: $clr-global-borderradius !default;
 
 // Info type
@@ -105,7 +105,8 @@ $clr-app-alert-info-close-icon-hover-opacity: $clr-app-alert-close-icon-hover-op
 
 // App Warning type
 // Usage: ./_alert.clarity.scss
-$clr-app-alert-warning-bg-color: $clr-color-warning-800 !default;
+// TODO-UX: why is the next color not in our color palettes?
+$clr-app-alert-warning-bg-color: hsl(26, 100%, 38%) !default;
 $clr-app-alert-warning-icon-color: $clr-app-alert-close-icon-color !default;
 $clr-app-alert-warning-border-color: none !default;
 $clr-app-alert-warning-font-color: $clr-app-level-alert-color !default;
@@ -131,7 +132,7 @@ $clr-app-alert-danger-close-icon-hover-opacity: $clr-app-alert-close-icon-hover-
 
 // App Success type
 // Usage: ./_alert.clarity.scss
-/* TODO: Determine if this should be deprecated and removed.*/
+// Deprecated in 3.0 for removal in 4.0
 $clr-app-alert-success-bg-color: $clr-color-success-500 !default;
 $clr-app-alert-success-icon-color: $clr-app-alert-close-icon-color !default;
 $clr-app-alert-success-font-color: $clr-app-level-alert-color !default;
@@ -143,43 +144,59 @@ $clr-app-alert-success-close-icon-opacity: $clr-app-alert-close-icon-opacity !de
 $clr-app-alert-success-close-icon-hover-color: $clr-app-alert-close-icon-color !default;
 $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover-opacity !default;
 
-@function getAlertColor($type: info, $property: color) {
+@function getAlertColor($type: info, $property: color, $var-type: 'sass-var') {
   @if $type == info {
-    @return lookupInfoAlertColor($property);
+    @return lookupInfoAlertColor($property, $var-type);
   }
 
   @if $type == success {
-    @return lookupSuccessAlertColor($property);
+    @return lookupSuccessAlertColor($property, $var-type);
   }
 
   @if $type == warning {
-    @return lookupWarningAlertColor($property);
+    @return lookupWarningAlertColor($property, $var-type);
   }
 
   @if $type == danger {
-    @return lookupDangerAlertColor($property);
+    @return lookupDangerAlertColor($property, $var-type);
   }
 
   @if $type == app-info {
-    @return lookupAppInfoAlertColor($property);
+    @return lookupAppInfoAlertColor($property, $var-type);
   }
 
   @if $type == app-warning {
-    @return lookupAppWarningAlertColor($property);
+    @return lookupAppWarningAlertColor($property, $var-type);
   }
 
   @if $type == app-danger {
-    @return lookupAppDangerAlertColor($property);
+    @return lookupAppDangerAlertColor($property, $var-type);
   }
 
   @if $type == app-success {
-    @return lookupAppSuccessAlertColor($property);
+    @return lookupAppSuccessAlertColor($property, $var-type);
   }
 
   @return null;
 }
 
-@function lookupInfoAlertColor($property: color) {
+@function getAlertCssVarName($alert-type: 'info', $prop: bg-color) {
+  @if $prop == color {
+    @return #{'clr-' + $alert-type + '-font-' + $prop};
+  }
+
+  @if $prop == icon or $prop == close-icon or $prop == close-icon-hover or $prop == action or $prop == action-active {
+    @return #{'clr-' + $alert-type + '-' + $prop + '-color'};
+  }
+
+  @return #{'clr-' + $alert-type + '-' + $prop};
+}
+
+@function lookupInfoAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('alert-info', $property);
+  }
+
   @if $property == color {
     @return $clr-alert-info-font-color;
   }
@@ -223,7 +240,11 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupSuccessAlertColor($property: color) {
+@function lookupSuccessAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('alert-success', $property);
+  }
+
   @if $property == color {
     @return $clr-alert-success-font-color;
   }
@@ -267,7 +288,11 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupWarningAlertColor($property: color) {
+@function lookupWarningAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('alert-warning', $property);
+  }
+
   @if $property == color {
     @return $clr-alert-warning-font-color;
   }
@@ -311,7 +336,11 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupDangerAlertColor($property: color) {
+@function lookupDangerAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('alert-danger', $property);
+  }
+
   @if $property == color {
     @return $clr-alert-danger-font-color;
   }
@@ -355,7 +384,11 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupAppDangerAlertColor($property: color) {
+@function lookupAppDangerAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('app-alert-danger', $property);
+  }
+
   @if $property == color {
     @return $clr-app-alert-danger-font-color;
   }
@@ -399,7 +432,12 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupAppSuccessAlertColor($property: color) {
+// Deprecated in 3.0 for removal in 4.0
+@function lookupAppSuccessAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('app-alert-success', $property);
+  }
+
   @if $property == color {
     @return $clr-app-alert-success-font-color;
   }
@@ -443,7 +481,11 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupAppInfoAlertColor($property: color) {
+@function lookupAppInfoAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('app-alert-info', $property);
+  }
+
   @if $property == color {
     @return $clr-app-alert-info-font-color;
   }
@@ -487,7 +529,11 @@ $clr-app-alert-success-close-icon-hover-opacity: $clr-app-alert-close-icon-hover
   @return null;
 }
 
-@function lookupAppWarningAlertColor($property: color) {
+@function lookupAppWarningAlertColor($property: color, $type: 'sass-var') {
+  @if $type == 'css-var' {
+    @return getAlertCssVarName('app-alert-warning', $property);
+  }
+
   @if $property == color {
     @return $clr-app-alert-warning-font-color;
   }

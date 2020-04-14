@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -14,15 +14,17 @@ import { ClrStackViewModule } from './stack-view.module';
 
 @Component({
   template: `
-        <clr-stack-block>
-            <clr-stack-label>Label</clr-stack-label>
-            <clr-stack-content>Content</clr-stack-content>
-        </clr-stack-block>
-   `,
+    <clr-stack-block [clrStackViewLevel]="ariaLevel" [clrStackViewSetsize]="ariaSetsize" [clrStackViewPosinset]="ariaPosinset">
+      <clr-stack-label>Label</clr-stack-label>
+      <clr-stack-content>Content</clr-stack-content>
+    </clr-stack-block>
+  `,
 })
 class BasicBlock {
-  @ViewChild(ClrStackBlock, { static: false })
-  blockInstance: ClrStackBlock;
+  @ViewChild(ClrStackBlock) blockInstance: ClrStackBlock;
+  ariaLevel: number;
+  ariaSetsize: number;
+  ariaPosinset: number;
 }
 
 @Component({
@@ -42,21 +44,19 @@ class BasicBlock {
    `,
 })
 class NestedBlocks {
-  @ViewChild('main', { static: false })
-  blockInstance: ClrStackBlock;
+  @ViewChild('main') blockInstance: ClrStackBlock;
 }
 
 @Component({
   template: `
         <clr-stack-block [clrSbExpandable]="true" [(clrSbExpanded)]="expanded">
-            <clr-stack-label>Label</clr-stack-label>
+            <clr-stack-label id="STACK_LABEL_ID">Label</clr-stack-label>
             <clr-stack-content>Content</clr-stack-content>
         </clr-stack-block>
    `,
 })
 class DynamicBlock {
-  @ViewChild(ClrStackBlock, { static: false })
-  blockInstance: ClrStackBlock;
+  @ViewChild(ClrStackBlock) blockInstance: ClrStackBlock;
 
   expanded: boolean = false;
 }
@@ -82,6 +82,30 @@ export default function(): void {
     function getBlockInstance(bFixture: ComponentFixture<any>): ClrStackBlock {
       return bFixture.componentInstance.blockInstance;
     }
+
+    describe('Accessibility', () => {
+      let label: HTMLElement;
+      beforeEach(() => {
+        fixture = TestBed.createComponent(BasicBlock);
+        fixture.componentInstance.ariaLevel = 42;
+        fixture.componentInstance.ariaPosinset = 32;
+        fixture.componentInstance.ariaSetsize = 100;
+        fixture.detectChanges();
+        label = fixture.nativeElement.querySelector('.stack-block-label');
+      });
+
+      it('should attach aria-level to dd.stack-block-content', () => {
+        expect(label.getAttribute('aria-level')).toBe(fixture.componentInstance.ariaLevel.toString());
+      });
+
+      it('should attach aria-posinset to dd.stack-block-content', () => {
+        expect(label.getAttribute('aria-posinset')).toBe(fixture.componentInstance.ariaPosinset.toString());
+      });
+
+      it('should attach aria-setsize to dd.stack-block-content', () => {
+        expect(label.getAttribute('aria-setsize')).toBe(fixture.componentInstance.ariaSetsize.toString());
+      });
+    });
 
     it('projects content', () => {
       fixture = TestBed.createComponent(BasicBlock);
@@ -124,6 +148,13 @@ export default function(): void {
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('.stack-block-caret')).toBeNull();
+    });
+
+    it('adds a unique id to the label', () => {
+      fixture = TestBed.createComponent(BasicBlock);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.stack-block-label').id).toContain('clr-id-');
     });
 
     it('toggles the caret direction based on the expandable property', () => {
@@ -257,6 +288,21 @@ export default function(): void {
       fixture.nativeElement.querySelector('clr-stack-label').click();
       fixture.detectChanges();
       expect(fixture.componentInstance.expanded).toBeFalsy();
+    });
+
+    it('sets aria-controls attribute corresponding to stack-children id', () => {
+      fixture = TestBed.createComponent(DynamicBlock);
+      fixture.detectChanges();
+
+      const stackLabel = fixture.nativeElement.querySelector('.stack-block-label');
+      // make sure the attribute does not exist when collapsed
+      expect(stackLabel.getAttribute('aria-controls')).toBeNull();
+      fixture.componentInstance.expanded = true;
+      fixture.detectChanges();
+      const controlsId = stackLabel.getAttribute('aria-controls');
+      expect(controlsId).not.toBeNull();
+      const childrenId = fixture.nativeElement.querySelector('.stack-children').getAttribute('id');
+      expect(childrenId).toBe(controlsId);
     });
   });
 }

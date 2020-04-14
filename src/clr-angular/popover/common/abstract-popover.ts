@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -15,8 +15,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { IfOpenService } from '../../utils/conditional/if-open.service';
-import { ESC } from '../../utils/key-codes/key-codes';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 
 import { Point, Popover } from './popover';
 import { PopoverOptions } from './popover-options.interface';
@@ -26,13 +25,13 @@ import { PopoverOptions } from './popover-options.interface';
 export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
   constructor(injector: Injector, @SkipSelf() protected parentHost: ElementRef) {
     this.el = injector.get(ElementRef);
-    this.ifOpenService = injector.get(IfOpenService);
+    this.toggleService = injector.get(ClrPopoverToggleService);
     this.renderer = injector.get(Renderer2);
     // Default anchor is the parent host
     this.anchorElem = parentHost.nativeElement;
 
     this.popoverInstance = new Popover(this.el.nativeElement);
-    this.subscription = this.ifOpenService.openChange.subscribe(change => {
+    this.subscription = this.toggleService.openChange.subscribe(change => {
       if (change) {
         this.anchor();
         this.attachESCListener();
@@ -41,14 +40,14 @@ export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
         this.detachESCListener();
       }
     });
-    if (this.ifOpenService.open) {
+    if (this.toggleService.open) {
       this.anchor();
       this.attachESCListener();
     }
   }
 
   protected el: ElementRef;
-  protected ifOpenService: IfOpenService;
+  protected toggleService: ClrPopoverToggleService;
   protected renderer: Renderer2;
 
   private popoverInstance: Popover;
@@ -66,7 +65,7 @@ export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
   protected anchor() {
     this.updateAnchor = true;
     // Ugh
-    this.ignore = this.ifOpenService.originalEvent;
+    this.ignore = this.toggleService.originalEvent;
   }
 
   protected release() {
@@ -81,7 +80,7 @@ export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
         .anchor(this.anchorElem, this.anchorPoint, this.popoverPoint, this.popoverOptions)
         .subscribe(() => {
           // if a scroll event is detected, close the popover
-          this.ifOpenService.open = false;
+          this.toggleService.open = false;
         });
       this.attachOutsideClickListener();
     }
@@ -99,7 +98,7 @@ export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
 
   @HostBinding('class.is-off-screen')
   get isOffScreen() {
-    return this.ifOpenService.open ? false : true;
+    return this.toggleService.open ? false : true;
   }
 
   /*
@@ -114,11 +113,15 @@ export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
   private ignore: any;
 
   private attachESCListener(): void {
-    this.documentESCListener = this.renderer.listen('document', 'keydown', event => {
-      if (event && event.keyCode === ESC) {
-        this.ifOpenService.open = false;
-      }
-    });
+    if (!this.popoverOptions.ignoreGlobalESCListener) {
+      this.documentESCListener = this.renderer.listen('document', 'keydown', event => {
+        if (event && event.key) {
+          if (event.key === 'Escape' || event.key === 'Esc') {
+            this.toggleService.open = false;
+          }
+        }
+      });
+    }
   }
 
   private detachESCListener(): void {
@@ -142,7 +145,7 @@ export abstract class AbstractPopover implements AfterViewChecked, OnDestroy {
         if (event === this.ignore) {
           delete this.ignore;
         } else {
-          this.ifOpenService.open = false;
+          this.toggleService.open = false;
         }
       });
     }

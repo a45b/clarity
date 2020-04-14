@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -8,9 +8,12 @@ import { Component, LOCALE_ID } from '@angular/core';
 @Component({
   selector: 'clr-datepicker-fr-demo',
   template: `
-        <h6 style="margin-top: 24px">Locale Idenitifer: fr</h6>
+        <h5 style="margin-top: 24px">Locale Idenitifer: fr</h5>
         <form clrForm clrLayout="vertical">
-            <input type="date" clrDate>
+            <clr-date-container>
+                <label>FR Locale</label>
+                <input type="date" clrDate>
+            </clr-date-container>
         </form>
         <table class="table">
             <thead>

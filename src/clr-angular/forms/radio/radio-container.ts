@@ -1,18 +1,15 @@
 /**
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { Component, ContentChild, Input, OnDestroy, Optional } from '@angular/core';
-import { NgControl } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Component, Input } from '@angular/core';
 
 import { IfErrorService } from '../common/if-error/if-error.service';
-import { ClrLabel } from '../common/label';
 import { ControlClassService } from '../common/providers/control-class.service';
-import { LayoutService } from '../common/providers/layout.service';
 import { NgControlService } from '../common/providers/ng-control.service';
+import { ClrAbstractContainer } from '../common/abstract-container';
 
 @Component({
   selector: 'clr-radio-container',
@@ -35,13 +32,8 @@ import { NgControlService } from '../common/providers/ng-control.service';
   },
   providers: [NgControlService, ControlClassService, IfErrorService],
 })
-export class ClrRadioContainer implements OnDestroy {
-  private subscriptions: Subscription[] = [];
-  invalid = false;
-  @ContentChild(ClrLabel, { static: false })
-  label: ClrLabel;
+export class ClrRadioContainer extends ClrAbstractContainer {
   private inline = false;
-  control: NgControl;
 
   /*
    * Here we want to support the following cases
@@ -59,38 +51,5 @@ export class ClrRadioContainer implements OnDestroy {
   }
   get clrInline() {
     return this.inline;
-  }
-
-  constructor(
-    private ifErrorService: IfErrorService,
-    @Optional() private layoutService: LayoutService,
-    private controlClassService: ControlClassService,
-    private ngControlService: NgControlService
-  ) {
-    this.subscriptions.push(
-      this.ifErrorService.statusChanges.subscribe(invalid => {
-        this.invalid = invalid;
-      })
-    );
-    this.subscriptions.push(
-      this.ngControlService.controlChanges.subscribe(control => {
-        this.control = control;
-      })
-    );
-  }
-
-  controlClass() {
-    return this.controlClassService.controlClass(this.invalid, this.addGrid(), this.inline ? 'clr-control-inline' : '');
-  }
-
-  addGrid() {
-    if (this.layoutService && !this.layoutService.isVertical()) {
-      return true;
-    }
-    return false;
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.map(sub => sub.unsubscribe());
   }
 }

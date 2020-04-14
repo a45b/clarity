@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -74,12 +74,15 @@ function updateJsonFile(path: string, callback: (a: any) => any) {
 // Checks if a version of Angular is compatible with current or next
 function getVersion(ngVersion: string, clrVersion: string) {
   const diff = 6; // Number disparity between Angular and Clarity, this works as long as we stay in sync with versioning
-  const version1 = ngVersion.split('.');
+  const version1 = Number.parseInt(ngVersion.split('.')[0]);
+  const version2 = Number.parseInt(clrVersion.split('.')[0]);
 
-  if (Number(version1[0]) - diff > 0) {
+  if (version1 - version2 > diff) {
+    // If Angular is more than 6 versions ahead, use `next` tag
     return 'next';
   } else {
-    return clrVersion;
+    // Else, calculate correct Clarity version by subtracting 6 from Angular major
+    return (version1 - diff).toString();
   }
 }
 
@@ -149,8 +152,11 @@ export default function(options: ComponentOptions): Rule {
       if (!packages.includes('@clr/icons')) {
         json.dependencies['@clr/icons'] = `${version}`;
       }
-      if (!packages.includes('@webcomponents/custom-elements')) {
-        json.dependencies['@webcomponents/custom-elements'] = '^1.0.0';
+      if (!packages.includes('@clr/core')) {
+        json.dependencies['@clr/core'] = `${version}`;
+      }
+      if (!packages.includes('@webcomponents/webcomponentsjs')) {
+        json.dependencies['@webcomponents/webcomponentsjs'] = '^2.0.0';
       }
     });
 
@@ -186,9 +192,13 @@ export default function(options: ComponentOptions): Rule {
       if (scriptsSearch.search('node_modules/@clr/icons/clr-icons.min.js') < 0) {
         scripts.push(pathPrefix + 'node_modules/@clr/icons/clr-icons.min.js');
       }
-      if (scriptsSearch.search('node_modules/@webcomponents/custom-elements/custom-elements.min.js') < 0) {
+      if (scriptsSearch.search('node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js') < 0) {
+        // Want this second
+        scripts.unshift(pathPrefix + 'node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js');
+      }
+      if (scriptsSearch.search('node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js') < 0) {
         // Want this first
-        scripts.unshift(pathPrefix + 'node_modules/@webcomponents/custom-elements/custom-elements.min.js');
+        scripts.unshift(pathPrefix + 'node_modules/@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js');
       }
     });
 

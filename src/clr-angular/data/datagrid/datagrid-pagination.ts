@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -17,10 +17,13 @@ import {
 import { Subscription } from 'rxjs';
 import { Page } from './providers/page';
 import { ClrDatagridPageSize } from './datagrid-page-size';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { DetailService } from './providers/detail.service';
 
 @Component({
   selector: 'clr-dg-pagination',
   template: `
+  <ng-container *ngIf="!detailService.isOpen">
     <div class="pagination-size" *ngIf="_pageSizeComponent">
       <ng-content select="clr-dg-page-size"></ng-content>
     </div>
@@ -28,31 +31,95 @@ import { ClrDatagridPageSize } from './datagrid-page-size';
       <ng-content></ng-content>
     </div>
     <div class="pagination-list" *ngIf="page.last > 1">
-      <button type="button" class="pagination-first" [disabled]="page.current <= 1" (click)="page.current = 1">
+      <button
+        type="button" 
+        class="pagination-first" 
+        [disabled]="page.current <= 1" 
+        (click)="page.current = 1"
+        [attr.aria-label]="commonStrings.keys.firstPage"
+        >
         <clr-icon shape="step-forward-2 down"></clr-icon>
       </button>
-      <button type="button" class="pagination-previous" [disabled]="page.current <= 1" (click)="page.current = page.current - 1">
+      <button 
+        type="button"
+        class="pagination-previous" 
+        [disabled]="page.current <= 1" 
+        (click)="page.current = page.current - 1"
+        [attr.aria-label]="commonStrings.keys.previousPage"
+        >
         <clr-icon shape="angle left"></clr-icon>
       </button>
-      <input #currentPageInput type="text" class="pagination-current" [size]="page.last.toString().length" [value]="page.current"
-             (keydown.enter)="updateCurrentPage($event)" (blur)="updateCurrentPage($event)"/>&nbsp;/&nbsp;<span>{{page.last}}</span>
-      <button type="button" class="pagination-next" [disabled]="page.current >= page.last" (click)="page.current = page.current + 1">
+        <input
+          *ngIf="!disableCurrentPageInput; else readOnly"
+          #currentPageInput 
+          type="text" 
+          class="pagination-current clr-input" 
+          [size]="page.last.toString().length" 
+          [value]="page.current"
+          (keydown.enter)="updateCurrentPage($event)" 
+          (blur)="updateCurrentPage($event)"
+          [attr.aria-label]="commonStrings.keys.currentPage"
+          />
+          <ng-template #readOnly>
+            <span>{{ page.current }}</span>
+          </ng-template>
+
+          &nbsp;/&nbsp;<span [attr.aria-label]="commonStrings.keys.totalPages">{{page.last}}</span>
+      <button 
+        type="button"
+        class="pagination-next" 
+        [disabled]="page.current >= page.last" 
+        (click)="page.current = page.current + 1"
+        [attr.aria-label]="commonStrings.keys.nextPage"
+        >
         <clr-icon shape="angle right"></clr-icon>
       </button>
-      <button type="button" class="pagination-last" [disabled]="page.current >= page.last" (click)="page.current = page.last">
+      <button 
+        type="button" 
+        class="pagination-last" 
+        [disabled]="page.current >= page.last" 
+        (click)="page.current = page.last"
+        [attr.aria-label]="commonStrings.keys.lastPage"
+        >
         <clr-icon shape="step-forward-2 up"></clr-icon>
       </button>
     </div>
-    `,
+  </ng-container>
+  <ng-container *ngIf="detailService.isOpen">
+      <div class="pagination-description-compact">
+          {{page.firstItem + 1}}-{{page.lastItem + 1}} / {{page.totalItems}}
+      </div>
+      <div class="pagination-list">
+          <button
+                  type="button"
+                  class="pagination-previous"
+                  [disabled]="page.current <= 1"
+                  (click)="page.current = page.current - 1"
+                  [attr.aria-label]="commonStrings.keys.previousPage"
+          >
+              <clr-icon shape="angle left"></clr-icon>
+          </button>
+          <span>{{page.current}}</span>
+          <button
+                  type="button"
+                  class="pagination-next"
+                  [disabled]="page.current >= page.last"
+                  (click)="page.current = page.current + 1"
+                  [attr.aria-label]="commonStrings.keys.nextPage"
+          >
+              <clr-icon shape="angle right"></clr-icon>
+          </button>
+      </div>
+  </ng-container>
+
+  `,
   host: { '[class.pagination]': 'true' },
 })
 export class ClrDatagridPagination implements OnDestroy, OnInit {
-  @ContentChild(ClrDatagridPageSize, { static: false })
-  _pageSizeComponent: ClrDatagridPageSize;
-  @ViewChild('currentPageInput', { static: false })
-  currentPageInputRef: ElementRef;
+  @ContentChild(ClrDatagridPageSize) _pageSizeComponent: ClrDatagridPageSize;
+  @ViewChild('currentPageInput') currentPageInputRef: ElementRef;
 
-  constructor(public page: Page) {
+  constructor(public page: Page, public commonStrings: ClrCommonStringsService, public detailService: DetailService) {
     this.page.activated = true;
   }
 
@@ -78,7 +145,7 @@ export class ClrDatagridPagination implements OnDestroy, OnInit {
   private _pageSubscription: Subscription;
 
   ngOnDestroy() {
-    this.page.resetPageSize();
+    this.page.resetPageSize(true);
     if (this._pageSubscription) {
       this._pageSubscription.unsubscribe();
     }
@@ -90,6 +157,8 @@ export class ClrDatagridPagination implements OnDestroy, OnInit {
   public get pageSize(): number {
     return this.page.size;
   }
+
+  @Input('clrDgPageInputDisabled') public disableCurrentPageInput: boolean;
 
   @Input('clrDgPageSize')
   public set pageSize(size: number) {

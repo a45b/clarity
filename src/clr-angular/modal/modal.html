@@ -1,6 +1,6 @@
 
 <!--
-  ~ Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+  ~ Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
   ~ This software is released under MIT license.
   ~ The full license information can be found in LICENSE in the root directory of this project.
   -->
@@ -13,19 +13,20 @@
          [class.modal-lg]="size == 'lg'"
          [class.modal-xl]="size == 'xl'"
          role="dialog"
+         aria-modal="true"
          [attr.aria-hidden]="!_open"
          [attr.aria-labelledby]="modalId">
-
+      <div class="clr-sr-only">{{commonStrings.keys.modalContentStart}}</div>
       <div class="modal-content-wrapper">
         <!-- only used in wizards -->
         <ng-content select=".modal-nav"></ng-content>
 
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" *ngIf="closable" (click)="close()">
-              <clr-icon shape="close" [attr.title]="commonStrings.close"></clr-icon>
+            <button type="button" [attr.aria-label]="commonStrings.keys.close" class="close" *ngIf="closable" (click)="close()">
+              <clr-icon shape="close"></clr-icon>
             </button>
-            <div class="modal-title-wrapper" id="{{modalId}}">
+            <div class="modal-title-wrapper" id="{{modalId}}" clrFocusOnViewInit>
               <ng-content select=".modal-title"></ng-content>
             </div>
           </div>
@@ -33,6 +34,7 @@
           <ng-content select=".modal-footer"></ng-content>
         </div>
       </div>
+      <div class="clr-sr-only">{{commonStrings.keys.modalContentEnd}}</div>
     </div>
 
     <div [@fade] class="modal-backdrop"

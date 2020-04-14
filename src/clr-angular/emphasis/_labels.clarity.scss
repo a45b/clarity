@@ -2,55 +2,74 @@
 // This software is released under MIT license.
 // The full license information can be found in LICENSE in the root directory of this project.
 
-// TODO: Split badges and labels into separate files.
-
 @mixin generateLabelStyles($color: gray, $alias: 1) {
+  $sassVarBgColor: getLabelColor($color, bg-color);
+  $cssVarBgColor: getLabelColor($color, bg-color, 'css-var');
+  $sassVarTextColor: getLabelColor($color, color);
+  $cssVarTextColor: getLabelColor($color, color, 'css-var');
+
   &.label-#{'' + $color},
   &.label-#{$alias} {
-    border: $clr-label-borderwidth solid getLabelColor($color, bg-color);
+    border: $clr-label-borderwidth solid;
+    @include css-var(border-color, $cssVarBgColor, $sassVarBgColor, $clr-use-custom-properties);
   }
 
   &.clickable.label-#{'' + $color} {
     &:hover,
     &:active {
       text-decoration: none;
-      background: $clr-label-bg-hover-color;
+      @include css-var(background, clr-label-bg-hover-color, $clr-label-bg-hover-color, $clr-use-custom-properties);
     }
 
     &:active {
-      box-shadow: 0 $clr-label-borderwidth 0 0 getLabelColor($color, bg-color) inset;
+      // OldEdge/IE
+      box-shadow: 0 $clr-label-borderwidth 0 0 $sassVarBgColor inset;
+      box-shadow: 0 $clr-label-borderwidth 0 0 var(css-variablize-string($cssVarBgColor), $sassVarBgColor) inset;
       transform: translateY(0.5px);
     }
   }
 
   &.label-#{'' + $color} > .badge {
-    background: getBadgeColor($color, bg-color);
-    color: getBadgeColor($color, color);
-  }
-}
-
-@mixin generateBadgeStyles($color: gray, $alias: 1) {
-  &.badge-#{'' + $color},
-  &.badge-#{$alias} {
-    background: getBadgeColor($color, bg-color);
-    color: getBadgeColor($color, color);
+    @include css-var(
+      background,
+      getBadgeColor($color, bg-color, 'css-var'),
+      getBadgeColor($color, bg-color),
+      $clr-use-custom-properties
+    );
+    @include css-var(
+      color,
+      getBadgeColor($color, color, 'css-var'),
+      getBadgeColor($color, color),
+      $clr-use-custom-properties
+    );
   }
 }
 
 @mixin generateStatusLabelStyles($status: info) {
   &.label-#{$status} {
-    background: getLabelColor($status, bg-color);
-    color: getLabelColor($status, color);
-    border: $clr-label-borderwidth solid getLabelColor($status, border-color);
+    @include css-var(
+      background,
+      getLabelColor($status, bg-color, 'css-var'),
+      getLabelColor($status, bg-color),
+      $clr-use-custom-properties
+    );
+    @include css-var(
+      color,
+      getLabelColor($status, color, 'css-var'),
+      getLabelColor($status, color),
+      $clr-use-custom-properties
+    );
+    border: $clr-label-borderwidth solid;
+    @include css-var(
+      border-color,
+      getLabelColor($status, border-color, 'css-var'),
+      getLabelColor($status, border-color),
+      $clr-use-custom-properties
+    );
   }
 }
 
-@mixin generateStatusBadgeStyles($status: info) {
-  &.badge-#{$status} {
-    background: getBadgeColor($status, bg-color);
-    color: getBadgeColor($status, color);
-  }
-}
+@import './properties.label';
 
 @include exports('labels.clarity') {
   //NOTE: Had to use inline-flex, reset line-height to normal, and had to use change a few values
@@ -60,26 +79,32 @@
   .label,
   a.label {
     //default
-    $label-nudge-for-vertical-alignment: 1px;
-    font-size: $clr-label-font-size;
-    font-weight: $clr-label-font-weight;
-    letter-spacing: $clr-label-letter-spacing;
+    $label-nudge-for-vertical-alignment: $clr_baselineRem_1px;
+    @include css-var(font-size, clr-label-font-size, $clr-label-font-size, $clr-use-custom-properties);
+    @include css-var(font-weight, clr-label-font-weight, $clr-label-font-weight, $clr-use-custom-properties);
+    @include css-var(letter-spacing, clr-label-letter-spacing, $clr-label-letter-spacing, $clr-use-custom-properties);
 
     // line-height needed to be adjusted to force center alignment
-    line-height: 0.458333rem;
+    line-height: $clr-label-font-size + $clr_baselineRem_1px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     padding: 0 $clr-label-padding-left-right $label-nudge-for-vertical-alignment;
-    border-radius: 0.5rem;
-    border: $clr-label-borderwidth solid $clr-label-default-border-color;
-    height: 0.875rem;
-    margin: 0 0.25rem 0 0;
+    @include css-var(border-radius, clr-label-border-radius, $clr_baselineRem_0_5, $clr-use-custom-properties);
+    border: $clr-label-borderwidth solid;
+    @include css-var(
+      border-color,
+      clr-label-default-border-color,
+      $clr-label-default-border-color,
+      $clr-use-custom-properties
+    );
+    height: $clr_baselineRem_0_875;
+    margin: 0 $clr_baselineRem_0_25 0 0;
     white-space: nowrap;
-    color: $clr-label-font-color;
+    @include css-var(color, clr-label-font-color-light, $clr-label-font-color-light, $clr-use-custom-properties);
 
     &:visited {
-      color: $clr-label-font-color;
+      @include css-var(color, clr-label-font-color-light, $clr-label-font-color-light, $clr-use-custom-properties);
     }
 
     &:focus,
@@ -91,11 +116,15 @@
     &.clickable {
       &:hover,
       &:active {
-        background: $clr-label-bg-hover-color;
+        @include css-var(background, clr-label-bg-hover-color, $clr-label-bg-hover-color, $clr-use-custom-properties);
       }
 
       &:active {
-        box-shadow: 0 1px 0 0 getLabelColor(gray, bg-color) inset;
+        $mySassShadow: getLabelColor(gray, bg-color);
+        // OldEdge/IE
+        box-shadow: 0 $clr_baselineRem_1px 0 0 getLabelColor(gray, bg-color) inset;
+        box-shadow: 0 $clr_baselineRem_1px 0 0
+          var(css-variablize-string(getLabelColor(gray, bg-color, 'css-var')), $mySassShadow) inset;
         transform: translateY(0.5px);
       }
     }
@@ -112,52 +141,9 @@
     @include generateStatusLabelStyles(danger);
 
     & > .badge {
-      margin: 0 -0.375rem 0 0.25rem; //-0.375 is -9px. 12px initial label padding plus a negative margin of 9
+      margin: 0 (-1 * $clr_baselineRem_0_375) 0 $clr_baselineRem_0_25;
+      //-0.375 is -9px. 12px initial label padding plus a negative margin of 9
     }
-  }
-
-  //NOTE: Had to use inline-flex, reset line-height to normal, and had to use change a few values
-  //instead of using our baselineRem function. This was done to achieve the desired look
-  //and to align this with our vertical baseline. Not sure why but aligning inline-blocks within inline-blocks
-  //is a bit tricky. I initially used display: inline-block but I wasn't able to align the badges properly.
-  //TODO: I still am unable to align the badges center of the baseline but have managed to aligned it to the
-  //bottom. There are no margins which are influencing this. Need to figure out whats the issue.
-  .badge {
-    $equiDimensions: 0.625rem;
-    $rem_10px: 0.416667rem;
-
-    display: inline-flex;
-    vertical-align: middle;
-    align-items: center;
-    justify-content: center;
-    min-width: $equiDimensions;
-    background: getLabelColor(gray, bg-color);
-    height: $equiDimensions;
-    line-height: normal;
-    border-radius: $rem_10px;
-    font-size: $rem_10px;
-    padding: 0 0.166667rem;
-    margin-right: 0.25rem;
-    white-space: nowrap;
-    text-align: center;
-    // TODO: use contrast color generators instead of hard-coded color vars
-    color: $clr-badge-font-color;
-
-    // TODO: use contrast color generators instead of hard-coded color vars
-    &:visited {
-      color: $clr-badge-font-color;
-    }
-
-    @include generateBadgeStyles(gray, 1);
-    @include generateBadgeStyles(purple, 2);
-    @include generateBadgeStyles(blue, 3);
-    @include generateBadgeStyles(orange, 4);
-    @include generateBadgeStyles(light-blue, 5);
-
-    @include generateStatusBadgeStyles(info);
-    @include generateStatusBadgeStyles(success);
-    @include generateStatusBadgeStyles(danger);
-    @include generateStatusBadgeStyles(warning);
   }
 
   @include fixForFirefox() {
@@ -165,18 +151,6 @@
     a.label {
       // properly aligns labels in firefox...
       vertical-align: bottom;
-    }
-  }
-
-  @include fixForIE10AndUp {
-    .badge {
-      padding: 0.083333rem 0.125rem 0;
-    }
-  }
-
-  @include fixForMsEdge {
-    .badge {
-      padding: 0.083333rem 0.125rem 0;
     }
   }
 }

@@ -33,6 +33,8 @@ import { DatagridResponsiveFooterDemo } from './responsive-footer/responsive-foo
 import { DatagridBuiltInFiltersDemo } from './built-in-filters/built-in-filters';
 import { DatagridTestCasesAsyncDemo } from './test-cases-async/test-cases-async';
 import { DatagridTestCasesDemo } from './test-cases/test-cases';
+import { DatagridDetailDemo } from './detail/detail';
+import { DatagridConditionalSelectionsDemo } from './conditional-selection/conditional-selection';
 
 const ROUTES: Routes = [
   {
@@ -60,12 +62,14 @@ const ROUTES: Routes = [
       { path: 'scrolling', component: DatagridScrollingDemo },
       { path: 'column-sizing', component: DatagridColumnSizingDemo },
       { path: 'compact', component: DatagridCompactDemo },
+      { path: 'detail', component: DatagridDetailDemo },
       { path: 'expandable-rows', component: DatagridExpandableRowsDemo },
       { path: 'full', component: DatagridFullDemo },
       { path: 'test-cases', component: DatagridTestCasesDemo },
       { path: 'test-cases-async', component: DatagridTestCasesAsyncDemo },
       { path: 'hide-show', component: DatagridHideShowDemo },
       { path: 'responsive-footer', component: DatagridResponsiveFooterDemo },
+      { path: 'conditional-selections', component: DatagridConditionalSelectionsDemo },
     ],
   },
 ];

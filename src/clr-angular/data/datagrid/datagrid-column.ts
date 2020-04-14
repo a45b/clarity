@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -13,6 +13,8 @@ import {
   OnInit,
   Output,
   ViewContainerRef,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 
@@ -30,12 +32,28 @@ import { Sort } from './providers/sort';
 import { DatagridFilterRegistrar } from './utils/datagrid-filter-registrar';
 import { ClrDatagridFilterInterface } from './interfaces/filter.interface';
 import { WrappedColumn } from './wrapped-column';
-import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
+import { ClrPopoverPositionService } from '../../utils/popover/providers/popover-position.service';
+import { ClrPopoverEventsService } from '../../utils/popover/providers/popover-events.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
+import { DetailService } from './providers/detail.service';
 
 @Component({
   selector: 'clr-dg-column',
   template: `
       <div class="datagrid-column-flex">
+          <button
+            class="datagrid-column-title"
+            [attr.aria-label]="commonStrings.keys.sortColumn"
+            *ngIf="sortable"
+            (click)="sort()"
+            type="button">
+              <ng-container  *ngTemplateOutlet="columnTitle"></ng-container>
+              <clr-icon
+                      *ngIf="sortIcon"
+                      [attr.shape]="sortIcon"
+                      class="sort-icon"></clr-icon>
+          </button>
           <!-- I'm really not happy with that select since it's not very scalable -->
           <ng-content select="clr-dg-filter, clr-dg-string-filter, clr-dg-numeric-filter"></ng-content>
 
@@ -43,7 +61,7 @@ import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
                   *ngIf="field && !customFilter && (colType=='string')"
                   [clrDgStringFilter]="registered"
                   [(clrFilterValue)]="filterValue"></clr-dg-string-filter>
-          
+
           <clr-dg-numeric-filter
                   *ngIf="field && !customFilter && (colType=='number')"
                   [clrDgNumericFilter]="registered"
@@ -53,31 +71,21 @@ import { ClrCommonStrings } from '../../utils/i18n/common-strings.interface';
               <ng-content></ng-content>
           </ng-template>
 
-          <button 
-            class="datagrid-column-title" 
-            [attr.aria-label]="commonStrings.sortColumn"
-            *ngIf="sortable" 
-            (click)="sort()" 
-            type="button">
-              <ng-container  *ngTemplateOutlet="columnTitle"></ng-container>
-              <clr-icon
-                      *ngIf="sortIcon"
-                      [attr.shape]="sortIcon"
-                      class="sort-icon"></clr-icon>
-          </button>
 
           <span class="datagrid-column-title" *ngIf="!sortable">
               <ng-container *ngTemplateOutlet="columnTitle"></ng-container>
           </span>
 
-          <clr-dg-column-separator></clr-dg-column-separator>
+          <clr-dg-column-separator *ngIf="showSeparator"></clr-dg-column-separator>
       </div>
-  `,
+    `,
+  providers: [ClrPopoverPositionService, ClrPopoverEventsService, ClrPopoverToggleService],
   host: {
     '[class.datagrid-column]': 'true',
     '[attr.aria-sort]': 'ariaSort',
     role: 'columnheader',
   },
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDatagridFilterInterface<T>>
   implements OnDestroy, OnInit {
@@ -85,10 +93,41 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
     private _sort: Sort<T>,
     filters: FiltersProvider<T>,
     private vcr: ViewContainerRef,
-    public commonStrings: ClrCommonStrings
+    private detailService: DetailService,
+    private changeDetectorRef: ChangeDetectorRef,
+    public commonStrings: ClrCommonStringsService
   ) {
     super(filters);
-    this._sortSubscription = _sort.change.subscribe(sort => {
+    this.subscriptions.push(this.listenForSortingChanges());
+    this.subscriptions.push(this.listenForDetailPaneChanges());
+  }
+
+  public showSeparator = true;
+
+  /**
+   * Subscription to the sort service changes
+   */
+  private subscriptions: Subscription[] = [];
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private listenForDetailPaneChanges() {
+    return this.detailService.stateChange.subscribe(state => {
+      if (this.showSeparator !== !state) {
+        this.showSeparator = !state;
+        // Have to manually change because of OnPush
+        this.changeDetectorRef.markForCheck();
+      }
+    });
+  }
+
+  private listenForSortingChanges() {
+    return this._sort.change.subscribe(sort => {
+      // Need to manually mark the component to be checked
+      // for both activating and deactivating sorting
+      this.changeDetectorRef.markForCheck();
       // We're only listening to make sure we emit an event when the column goes from sorted to unsorted
       if (this.sortOrder !== ClrDatagridSortOrder.UNSORTED && sort.comparator !== this._sortBy) {
         this._sortOrder = ClrDatagridSortOrder.UNSORTED;
@@ -105,15 +144,6 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
     });
   }
 
-  /**
-   * Subscription to the sort service changes
-   */
-  private _sortSubscription: Subscription;
-
-  ngOnDestroy() {
-    this._sortSubscription.unsubscribe();
-  }
-
   /*
      * Simple object property shortcut, activates both sorting and filtering
      * based on native comparison of the specified property on the items.
@@ -123,20 +153,52 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
     return this._field;
   }
 
+  /*
+  * What type is this column?  This defaults to STRING, but can also be
+  * set to NUMBER.  Unsupported types default to STRING. Users can set it
+  * via the [clrDgColType] input by setting it to 'string' or 'number'.
+  */
+
+  private _colType: 'string' | 'number' = 'string';
+
+  get colType() {
+    return this._colType;
+  }
+
+  // TODO: We might want to make this an enum in the future
+  @Input('clrDgColType')
+  set colType(value: 'string' | 'number') {
+    this._colType = value;
+    if (!this.customFilter && !this.filter && this._colType && this._field) {
+      this.setupDefaultFilter(this._field, this._colType);
+    }
+  }
+
   @Input('clrDgField')
   public set field(field: string) {
     if (typeof field === 'string') {
       this._field = field;
-      if (!this.customFilter) {
-        if (this.colType === 'number') {
-          this.setFilter(new DatagridNumericFilterImpl(new DatagridPropertyNumericFilter(field)));
-        } else {
-          this.setFilter(new DatagridStringFilterImpl(new DatagridPropertyStringFilter(field)));
-        }
+      if (!this.customFilter && this._colType) {
+        this.setupDefaultFilter(this._field, this._colType);
       }
       if (!this._sortBy) {
-        this._sortBy = new DatagridPropertyComparator(field);
+        this._sortBy = new DatagridPropertyComparator(this._field);
       }
+    }
+  }
+
+  private setupDefaultFilter(field: string, colType: 'string' | 'number') {
+    if (colType === 'number') {
+      this.setFilter(new DatagridNumericFilterImpl(new DatagridPropertyNumericFilter(field)));
+    } else if (colType === 'string') {
+      this.setFilter(new DatagridStringFilterImpl(new DatagridPropertyStringFilter(field)));
+    }
+    if (this.filter && this.initFilterValue) {
+      this.updateFilterValue = this.initFilterValue;
+      // This initFilterValue should be used only once after the filter registration
+      // So deleting this property value to prevent it from being used again
+      // if this field property is set again
+      delete this.initFilterValue;
     }
   }
 
@@ -166,15 +228,6 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
       }
     }
   }
-
-  /*
-    * What type is this column?  This defaults to STRING, but can also be
-    * set to NUMBER.  Unsupported types default to STRING. Users can set it
-    * via the [clrDgColType] input by setting it to 'string' or 'number'.
-    */
-
-  // TODO: We might want to make this an enum in the future
-  @Input('clrDgColType') colType: 'string' | 'number' = 'string';
 
   /**
    * Indicates if the column is sortable
@@ -262,6 +315,7 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
 
   @Output('clrDgSortOrderChange') public sortOrderChange = new EventEmitter<ClrDatagridSortOrder>();
 
+  public sortIcon: string;
   /**
    * Sorts the datagrid based on this column
    */
@@ -284,20 +338,22 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
     // deprecated: to be removed - END
   }
 
-  public sortIcon;
-
   /**
    * A custom filter for this column that can be provided in the projected content
    */
   public customFilter = false;
 
-  @ContentChild(CustomFilter, { static: false })
+  @ContentChild(CustomFilter)
   public set projectedFilter(custom: any) {
     if (custom) {
       this.deleteFilter();
       this.customFilter = true;
     }
   }
+
+  // This property holds filter value temporarily while this.filter property is not yet registered
+  // When this.filter is registered, this property value would be used update this.filter.value
+  private initFilterValue: string | [number, number];
 
   public get filterValue() {
     if (this.filter instanceof DatagridStringFilterImpl || this.filter instanceof DatagridNumericFilterImpl) {
@@ -307,23 +363,24 @@ export class ClrDatagridColumn<T = any> extends DatagridFilterRegistrar<T, ClrDa
 
   @Input('clrFilterValue')
   public set updateFilterValue(newValue: string | [number, number]) {
-    if (!this.filter) {
-      return;
-    }
-    if (this.filter instanceof DatagridStringFilterImpl) {
-      if (!newValue || typeof newValue !== 'string') {
-        newValue = '';
+    if (this.filter) {
+      if (this.filter instanceof DatagridStringFilterImpl) {
+        if (!newValue || typeof newValue !== 'string') {
+          newValue = '';
+        }
+        if (newValue !== this.filter.value) {
+          this.filter.value = newValue;
+        }
+      } else if (this.filter instanceof DatagridNumericFilterImpl) {
+        if (!newValue || !(newValue instanceof Array)) {
+          newValue = [null, null];
+        }
+        if (newValue.length === 2 && (newValue[0] !== this.filter.value[0] || newValue[1] !== this.filter.value[1])) {
+          this.filter.value = newValue;
+        }
       }
-      if (newValue !== this.filter.value) {
-        this.filter.value = newValue;
-      }
-    } else if (this.filter instanceof DatagridNumericFilterImpl) {
-      if (!newValue || !(newValue instanceof Array)) {
-        newValue = [null, null];
-      }
-      if (newValue.length === 2 && (newValue[0] !== this.filter.value[0] || newValue[1] !== this.filter.value[1])) {
-        this.filter.value = newValue;
-      }
+    } else {
+      this.initFilterValue = newValue;
     }
   }
 

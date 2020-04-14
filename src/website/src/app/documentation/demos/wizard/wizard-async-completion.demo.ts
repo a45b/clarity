@@ -154,7 +154,7 @@ export class WizardAsyncCompletion {
     <clr-wizard-page>
         <ng-template clrPageTitle>Form question</ng-template> <!-- mandatory -->
 
-        <clr-alert [clrAlertType]="'alert-info'" [clrAlertClosable]="false">
+        <clr-alert [clrAlertType]="'alert-info'" [clrAlertClosable]="false" [clrCloseButtonAriaLabel]="'Close Wiki alert'">
             <div class="alert-item">
                 This&nbsp;<a
                     href="https://en.wikipedia.org/wiki/42_(number)#The_Hitchhiker.27s_Guide_to_the_Galaxy"
@@ -175,15 +175,15 @@ export class WizardAsyncCompletion {
         (clrWizardPagePrevious)="goBack()">
         <ng-template clrPageTitle>Async validation on finish</ng-template> <!-- mandatory -->
 
-        <clr-alert *ngIf="errorFlag" [clrAlertType]="'alert-danger'">
+        <clr-alert *ngIf="errorFlag" [clrAlertType]="'alert-danger'" [clrCloseButtonAriaLabel]="'Close Answer alert'">
             <div class="alert-item">
                 Your answer is incorrect.
             </div>
         </clr-alert>
 
-        <div class="spinner" *ngIf="loadingFlag">
-            Loading...
-        </div>
+        <clr-spinner *ngIf="loadingFlag">
+            Loading
+        </clr-spinner>
 
         <p *ngIf="errorFlag && !loadingFlag">Go back and try again!</p>
 

@@ -1,51 +1,45 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
-import { SkipSelf, Optional, InjectableProvider, forwardRef } from '@angular/core';
 
-import { ClrCommonStrings } from './common-strings.interface';
+import { Injectable } from '@angular/core';
 
-// @TODO Put the Required type back in when our minimumly supported version of Angular uses
-// TS 2.8 or greater (should be Angular 7)
-// export class ClrCommonStringsService implements Required<ClrCommonStrings> {
-export class ClrCommonStringsService implements ClrCommonStrings {
-  open = 'Open';
-  close = 'Close';
-  show = 'Show';
-  hide = 'Hide';
-  expand = 'Expand';
-  collapse = 'Collapse';
-  more = 'More';
-  select = 'Select';
-  selectAll = 'Select All';
-  previous = 'Previous';
-  next = 'Next';
-  current = 'Jump to current';
-  info = 'Info';
-  success = 'Success';
-  warning = 'Warning';
-  danger = 'Error';
-  rowActions = 'Available actions';
-  pickColumns = 'Show or hide columns';
-  showColumns = 'Show Columns';
-  sortColumn = 'Sort Column';
-  minValue = 'Min value';
-  maxValue = 'Max value';
-}
+import { commonStringsDefault } from './../../utils/i18n/common-strings.default';
+import { ClrCommonStrings } from './../../utils/i18n/common-strings.interface';
 
-export function commonStringsFactory(existing?: ClrCommonStrings): ClrCommonStrings {
-  const defaults = new ClrCommonStringsService();
-  if (existing) {
-    return { ...defaults, ...existing };
+@Injectable({
+  providedIn: 'root',
+})
+export class ClrCommonStringsService {
+  private _strings = commonStringsDefault;
+
+  /**
+   * Allows you to pass in new overrides for localization
+   */
+  localize(overrides: Partial<ClrCommonStrings>) {
+    this._strings = { ...this._strings, ...overrides };
   }
-  return defaults;
-}
 
-export const COMMON_STRINGS_PROVIDER: InjectableProvider = {
-  useFactory: commonStringsFactory,
-  // We have a circular dependency for now, we can address it later once these
-  // tree-shakeable providers have proper documentation.
-  deps: [[new Optional(), new SkipSelf(), forwardRef(() => ClrCommonStrings)]],
-};
+  /**
+   * Access to all of the keys as strings
+   */
+  get keys(): Readonly<ClrCommonStrings> {
+    return this._strings;
+  }
+
+  /**
+   * Parse a string with a set of tokens to replace
+   */
+  parse(source: string, tokens: { [key: string]: string } = {}) {
+    const names = Object.keys(tokens);
+    let output = source;
+    if (names.length) {
+      names.forEach(name => {
+        output = output.replace(`{${name}}`, tokens[name]);
+      });
+    }
+    return output;
+  }
+}

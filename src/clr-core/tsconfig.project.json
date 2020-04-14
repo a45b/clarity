@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.lib.json",
+  "compilerOptions": {
+    "outDir": "../../dist/clr-core",
+    "rootDir": "./"
+  },
+  "include": ["./"],
+  "references": [
+    { "path": "./internal/entrypoint.tsconfig.json" },
+    { "path": "./alert/entrypoint.tsconfig.json" },
+    { "path": "./badge/entrypoint.tsconfig.json" },
+    { "path": "./button/entrypoint.tsconfig.json" },
+    { "path": "./icon/entrypoint.tsconfig.json" },
+    { "path": "./icon-shapes/entrypoint.tsconfig.json" },
+    { "path": "./tag/entrypoint.tsconfig.json" },
+    { "path": "./test-dropdown/entrypoint.tsconfig.json" }
+  ]
+}

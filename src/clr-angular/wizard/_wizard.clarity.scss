@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+// Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
 // This software is released under MIT license.
 // The full license information can be found in LICENSE in the root directory of this project.
 
@@ -8,19 +8,37 @@
 // IT'S AN ISSUE WITH THE NUMBER OF BUTTONS, NOT THE LENGTH OF THE TEXT
 // INSIDE THE BUTTONS
 
+@import './properties.wizard';
+
 @include exports('wizard.clarity') {
   .clr-wizard {
     .modal-dialog {
       display: flex;
       flex-direction: column;
       align-items: center;
+      // IE/OldEdge
       box-shadow: $clr-wizard-box-shadow;
+      @if $clr-use-custom-properties == true {
+        box-shadow: 0 $clr_baselineRem_1px $clr_baselineRem_2px $clr_baselineRem_2px var(--clr-wizard-box-shadow-color);
+      }
       height: 50%;
       max-height: 100%;
     }
 
     .modal-content {
-      border-radius: 0 $clr-wizard-border-radius $clr-wizard-border-radius 0;
+      border-radius: 0;
+      @include css-var(
+        border-top-right-radius,
+        clr-wizard-border-radius,
+        $clr-wizard-border-radius,
+        $clr-use-custom-properties
+      );
+      @include css-var(
+        border-bottom-right-radius,
+        clr-wizard-border-radius,
+        $clr-wizard-border-radius,
+        $clr-use-custom-properties
+      );
       box-shadow: none;
       padding: 0;
       flex: 2 2 auto;
@@ -36,7 +54,8 @@
       flex: 0 0 auto;
       width: 100%;
       // right padding nudged a bit to better align icons
-      padding: $clr-wizard-default-space ($clr-wizard-default-space - 0.208333rem) 0.25rem $clr-wizard-default-space;
+      padding: $clr-wizard-default-space ($clr-wizard-default-space - $clr_baselineRem_5px) $clr_baselineRem_0_25
+        $clr-wizard-default-space;
       display: flex;
       flex-direction: row-reverse;
       justify-content: space-between;
@@ -44,15 +63,18 @@
     }
 
     .modal-title {
-      color: $clr-wizard-title-text;
+      @include css-var(color, clr-wizard-title-text, $clr-wizard-title-text, $clr-use-custom-properties);
       display: flex;
       flex-direction: row;
       width: 100%;
+      // align focus style across modal title
+      line-height: $clr_baselineRem_1_13;
+      margin-top: -1 * $clr_baselineRem_0_13;
     }
 
     .modal-body {
       flex: 1 1 auto;
-      color: $clr-wizard-main-textColor;
+      @include css-var(color, clr-wizard-main-textColor, $clr-wizard-main-textColor, $clr-use-custom-properties);
       width: 100%;
     }
 
@@ -77,39 +99,56 @@
       display: inline-block;
       flex: 0 1 auto;
       width: 100%;
+      outline: none;
+    }
+
+    .modal-title-wrapper {
+      width: 100%;
     }
 
     .modal-header-actions-wrapper {
       flex: 1 0 auto;
-      padding-left: 0.5rem;
-      padding-right: 0.166667rem;
+      padding-left: $clr_baselineRem_0_5;
+      padding-right: $clr_baselineRem_4px;
     }
 
     .clr-wizard-header-action {
-      width: $clr-wizard-default-space;
-      height: $clr-wizard-default-space;
+      @include equilateral($clr-wizard-default-space);
       padding: 0;
       margin: 0;
       min-width: $clr-wizard-default-space;
       line-height: $clr-wizard-default-space;
-      font-size: $clr-wizard-default-space + 0.083333rem;
-      color: $clr-wizard-header-action-color;
+      font-size: $clr-wizard-default-space + $clr_baselineRem_2px;
+      @include css-var(
+        color,
+        clr-wizard-header-action-color,
+        $clr-wizard-header-action-color,
+        $clr-use-custom-properties
+      );
       transition: color linear 0.2s;
 
       & a {
-        color: $clr-wizard-header-action-color;
+        @include css-var(
+          color,
+          clr-wizard-header-action-color,
+          $clr-wizard-header-action-color,
+          $clr-use-custom-properties
+        );
       }
 
       &:hover,
       &:active,
       &:focus {
-        color: $clr-wizard-header-action-color--hovered;
+        @include css-var(
+          color,
+          unquote('clr-wizard-header-action-color--hovered'),
+          $clr-wizard-header-action-color--hovered,
+          $clr-use-custom-properties
+        );
       }
 
       clr-icon {
-        $clr-wizard-header-action-icon-dim: ($clr-wizard-default-space - 0.083333rem);
-        height: $clr-wizard-header-action-icon-dim;
-        width: $clr-wizard-header-action-icon-dim;
+        @include equilateral($clr-wizard-default-space - $clr_baselineRem_2px);
       }
     }
 
@@ -124,17 +163,41 @@
       overflow-y: auto;
       padding-bottom: $clr-wizard-default-space;
       line-height: $clr-wizard-default-space;
-      border-right: $clr-default-borderwidth solid $clr-wizard-step-nav-border-color;
+      @include css-var(border-right-width, clr-global-borderwidth, $clr-global-borderwidth, $clr-use-custom-properties);
+      border-right-style: solid;
+      @include css-var(
+        border-right-color,
+        clr-wizard-step-nav-border-color,
+        $clr-wizard-step-nav-border-color,
+        $clr-use-custom-properties
+      );
       height: 100%;
-      background-color: $clr-wizard-sidenav-bgcolor;
-      border-radius: $clr-wizard-border-radius 0 0 $clr-wizard-border-radius;
+      @include css-var(
+        background-color,
+        clr-wizard-sidenav-bgcolor,
+        $clr-wizard-sidenav-bgcolor,
+        $clr-use-custom-properties
+      );
+      border-radius: 0;
+      @include css-var(
+        border-top-left-radius,
+        clr-wizard-border-radius,
+        $clr-wizard-border-radius,
+        $clr-use-custom-properties
+      );
+      @include css-var(
+        border-bottom-left-radius,
+        clr-wizard-border-radius,
+        $clr-wizard-border-radius,
+        $clr-use-custom-properties
+      );
     }
 
     .clr-wizard-stepnav {
       padding-left: $clr-wizard-default-space;
       display: block;
-      font-size: 0.583333rem;
-      color: $clr-wizard-sidenav-text;
+      font-size: $clr_baselineRem_0_583;
+      @include css-var(color, clr-wizard-sidenav-text, $clr-wizard-sidenav-text, $clr-use-custom-properties);
       width: 100%;
       flex: 1 1 auto;
     }
@@ -152,25 +215,60 @@
 
     .clr-wizard-stepnav-item {
       display: block;
+      // IE/OldEdge
       box-shadow: $clr-wizard-stepnav-border-size 0 0 $clr-wizard-stepnav-border-color inset;
-      margin: 0 0 (-1 * $clr-default-borderwidth) 0;
-      padding: 0.25rem 0;
-      padding-left: 0.333333rem;
-      color: $clr-wizard-sidenav-text;
-      font-weight: 400;
+      @if $clr-use-custom-properties == true {
+        box-shadow: var(--clr-wizard-stepnav-border-size) 0 0 var(--clr-wizard-stepnav-border-color) inset;
+      }
+      margin: 0 0 (-1 * $clr-global-borderwidth) 0;
+      padding: $clr_baselineRem_0_25 0;
+      padding-left: $clr_baselineRem_8px;
+      @include css-var(color, clr-wizard-sidenav-text, $clr-wizard-sidenav-text, $clr-use-custom-properties);
+      @include css-var(font-weight, clr-font-weight-regular, $clr-font-weight-regular, $clr-use-custom-properties);
 
       &.active {
-        color: $clr-wizard-sidenav-text--active;
-        font-weight: 500;
+        @include css-var(
+          color,
+          unquote('clr-wizard-sidenav-text--active'),
+          $clr-wizard-sidenav-text--active,
+          $clr-use-custom-properties
+        );
+        @include css-var(font-weight, clr-font-weight-semibold, $clr-font-weight-semibold, $clr-use-custom-properties);
 
         .clr-wizard-stepnav-link {
-          background-color: $clr-wizard-stepnav-active-bgcolor;
-          border-radius: $clr-wizard-stepnav-active-border-radius 0 0 $clr-wizard-stepnav-active-border-radius;
+          @include css-var(
+            background-color,
+            clr-wizard-stepnav-active-bgcolor,
+            $clr-wizard-stepnav-active-bgcolor,
+            $clr-use-custom-properties
+          );
+          border-radius: 0;
+          @include css-var(
+            border-top-left-radius,
+            clr-wizard-border-radius,
+            $clr-wizard-border-radius,
+            $clr-use-custom-properties
+          );
+          @include css-var(
+            border-bottom-left-radius,
+            clr-wizard-border-radius,
+            $clr-wizard-border-radius,
+            $clr-use-custom-properties
+          );
         }
       }
 
       &.complete {
+        // IE/OldEdge
         box-shadow: $clr-wizard-stepnav-border-size 0 0 $clr-wizard-stepnav-border-color--active inset;
+        @if $clr-use-custom-properties == true {
+          box-shadow: var(--clr-wizard-stepnav-border-size) 0 0 var(--clr-wizard-stepnav-border-color--active) inset;
+        }
+        transition: box-shadow 0.2s ease-in;
+      }
+
+      &.error {
+        box-shadow: $clr-wizard-stepnav-border-size 0 0 $clr-wizard-stepnav-error-color inset;
         transition: box-shadow 0.2s ease-in;
       }
 
@@ -181,34 +279,40 @@
 
     .clr-wizard-stepnav-link {
       width: 100%;
-      display: inline-block;
+      display: flex;
       color: inherit;
-      line-height: 0.666667rem;
-      padding: 0.416667rem;
-      padding-right: 0.125rem;
-      font-size: 0.583333rem;
+      align-items: center;
+      padding: 0 $clr_baselineRem_0_125 0 $clr_baselineRem_0_416;
+      font-size: $clr_baselineRem_0_583;
       font-weight: inherit;
       letter-spacing: normal;
       text-align: left;
       text-transform: none;
       margin: 0;
 
-      &::before {
-        content: counter(a);
-        counter-increment: a;
-        padding-right: 0.25rem + $clr-rem-1px;
-        min-width: 0.625rem;
+      .clr-wizard-stepnav-link-suffix {
+        display: flex;
+        justify-content: center;
+        min-width: $clr_baselineRem_1;
+        padding-right: $clr_baselineRem_0_25 + $clr_baselineRem_1px;
+
+        .clr-wizard-stepnav-item-error-icon {
+          transform: none;
+          fill: $clr-wizard-stepnav-error-color;
+        }
       }
     }
 
     .clr-wizard-title {
-      color: $clr-wizard-title-text;
+      @include css-var(color, clr-wizard-title-text, $clr-wizard-title-text, $clr-use-custom-properties);
       margin-top: 0;
       padding-top: $clr-wizard-default-space;
       padding-left: $clr-wizard-default-space;
       padding-right: $clr-wizard-default-space * 0.5;
       padding-bottom: $clr-wizard-default-space;
       flex: 0 0 auto;
+      font-size: $clr-modal-title-font-size;
+      line-height: $clr-modal-title-line-height;
     }
 
     // normal modal ignores this. wizard needs it so the nav and content
@@ -217,8 +321,7 @@
       display: flex;
       flex-direction: row;
       flex: 1 1 100%;
-      width: 100%;
-      height: 100%;
+      @include equilateral(100%);
       // firefox fix
       max-height: 100%;
 
@@ -243,8 +346,8 @@
 
     .clr-wizard-btn-wrapper {
       flex: 0 1 auto;
-      min-width: 3.5rem;
-      padding-left: 0.5rem;
+      min-width: $clr_baselineRem_3_5;
+      padding-left: $clr_baselineRem_0_5;
     }
 
     .clr-wizard-btn-wrapper[aria-hidden='true'] {
@@ -262,7 +365,7 @@
 
     .clr-wizard-page:not([aria-hidden='true']) {
       padding: $clr-wizard-default-space;
-      padding-top: 0.75rem;
+      padding-top: $clr_baselineRem_0_75;
       display: block;
     }
   }
@@ -327,7 +430,7 @@
     }
 
     .spinner:not(.spinner-inline):not(.clr-treenode-spinner) {
-      left: calc(50% + 4.791667rem);
+      left: calc(50% + #{$clr_baselineRem_4_791667});
       position: absolute;
       top: 40%;
     }
@@ -351,6 +454,7 @@
     }
   }
 
+  /** @deprecated since 3.0, inline wizard style should be removed in 4.0 */
   .clr-wizard--inline {
     display: block;
     width: 100%;
@@ -366,8 +470,7 @@
     }
 
     clr-modal {
-      height: 100%;
-      width: 100%;
+      @include equilateral(100%);
       display: block;
     }
 
@@ -381,8 +484,7 @@
         height: 100%;
 
         .nav-panel {
-          width: 99%;
-          height: 99%;
+          @include equilateral(99%);
         }
       }
 
@@ -392,8 +494,7 @@
 
       .modal-dialog {
         min-height: 100%;
-        height: 100%;
-        width: 100%;
+        @include equilateral(100%);
         z-index: auto;
       }
     }
@@ -415,8 +516,7 @@
     }
 
     .modal-backdrop {
-      height: 0;
-      width: 0;
+      @include equilateral(0);
       display: none;
     }
 
@@ -450,7 +550,7 @@
     }
 
     .clr-wizard-stepnav {
-      padding-top: 1rem;
+      padding-top: $clr_baselineRem_1;
     }
   }
 
@@ -464,6 +564,6 @@
 @include fixForMsEdge {
   // Edge is pushing header actions down. This aligns them with the close btn.
   .clr-wizard .clr-wizard-header-action {
-    margin-top: -0.125rem;
+    margin-top: -1 * $clr_baselineRem_0_125;
   }
 }

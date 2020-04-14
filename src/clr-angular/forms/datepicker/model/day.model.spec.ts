@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -57,17 +57,6 @@ export default function(): void {
       incrementDayModelAndCompare(dayModel1, -1);
     });
 
-    it('returns the Calendar in which the DayModel belongs in', () => {
-      expect(dayModel1.calendar).not.toBeNull();
-      expect(dayModel2.calendar).not.toBeNull();
-
-      expect(dayModel1.calendar.month).toBe(0);
-      expect(dayModel1.calendar.year).toBe(2018);
-
-      expect(dayModel2.calendar.month).toBe(5);
-      expect(dayModel2.calendar.year).toBe(2018);
-    });
-
     it('returns a clone of the DayModel', () => {
       let testDayModel: DayModel = dayModel1.clone();
 
@@ -77,6 +66,17 @@ export default function(): void {
 
       testDayModel = dayModel2.clone();
       expect(assertEqualDates(testDayModel.toDate(), dayModel2.toDate())).toBe(true);
+    });
+
+    it('provides a toDateString method that returns the local date string', () => {
+      const testString = dayModel1.toDateString();
+      expect(testString).toEqual('1/1/2018');
+    });
+
+    it('provides a toComparisonString method to compare dates', () => {
+      const testString = dayModel1.toComparisonString();
+      // Remember, months are 0 indexed
+      expect(testString).toEqual('20180001');
     });
   });
 }

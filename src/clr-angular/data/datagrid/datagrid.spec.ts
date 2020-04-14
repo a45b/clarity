@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -7,6 +7,7 @@ import { ChangeDetectionStrategy, Component, Input, Renderer2 } from '@angular/c
 import { Subject } from 'rxjs';
 import { async } from '@angular/core/testing';
 
+import { commonStringsDefault } from './../../utils/i18n/common-strings.default';
 import { DatagridPropertyStringFilter } from './built-in/filters/datagrid-property-string-filter';
 import { DatagridStringFilterImpl } from './built-in/filters/datagrid-string-filter-impl';
 import { ClrDatagrid } from './datagrid';
@@ -31,19 +32,23 @@ import { HIDDEN_COLUMN_CLASS } from './render/constants';
 
 @Component({
   template: `
-    <clr-datagrid *ngIf="!destroy"
-                  [(clrDgSelected)]="selected" [clrDgLoading]="loading" (clrDgRefresh)="refresh($event)">
+    <clr-datagrid
+      *ngIf="!destroy"
+      [(clrDgSelected)]="selected"
+      [clrDgLoading]="loading"
+      (clrDgRefresh)="refresh($event)"
+      >
         <clr-dg-column>
             First
             <clr-dg-filter *ngIf="filter" [clrDgFilter]="testFilter"></clr-dg-filter>
         </clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *clrDgItems="let item of items">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
         </clr-dg-row>
-    
+
         <clr-dg-footer>{{items.length}} items</clr-dg-footer>
     </clr-datagrid>
 `,
@@ -77,12 +82,12 @@ class FullTest {
     <clr-datagrid>
         <clr-dg-column>First</clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *ngFor="let item of items">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
         </clr-dg-row>
-    
+
         <clr-dg-footer>{{items.length}} items</clr-dg-footer>
     </clr-datagrid>
 `,
@@ -109,7 +114,7 @@ class OnPushTest {
     <clr-datagrid [(clrDgSelected)]="selected">
         <clr-dg-column>First</clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *clrDgItems="let item of items;" [clrDgItem]="item">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
@@ -124,15 +129,15 @@ class MultiSelectionTest {
 
 @Component({
   template: `
-    <clr-datagrid [(clrDgSingleSelected)]="selected">
+    <clr-datagrid [(clrDgSingleSelected)]="selected" clrDgSingleSelectionAriaLabel="Select row from Datagrid">
         <clr-dg-column>First</clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *clrDgItems="let item of items;" [clrDgItem]="item">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
         </clr-dg-row>
-    
+
         <clr-dg-footer (click)="selected = null">{{selected}}</clr-dg-footer>
     </clr-datagrid>
 `,
@@ -144,20 +149,20 @@ class SingleSelectionTest {
 
 @Component({
   template: `
-    <clr-datagrid>
+    <clr-datagrid clrDgSingleActionableAriaLabel="Select one of actionable rows">
         <clr-dg-column>First</clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *clrDgItems="let item of items;">
-        
+
             <clr-dg-action-overflow *ngIf="item > showIfGreaterThan">
                 <button class="action-item">Edit</button>
             </clr-dg-action-overflow>
-                
+
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
         </clr-dg-row>
-    
+
         <clr-dg-footer>{{items.length}} items</clr-dg-footer>
     </clr-datagrid>
 `,
@@ -169,10 +174,10 @@ class ActionableRowTest {
 
 @Component({
   template: `
-    <clr-datagrid>
+    <clr-datagrid clrDetailExpandableAriaLabel="Expand one of the rows">
         <clr-dg-column>First</clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *clrDgItems="let item of items;" [clrDgItem]="item">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
@@ -180,7 +185,7 @@ class ActionableRowTest {
                 <clr-dg-row-detail *clrIfExpanded>Detail</clr-dg-row-detail>
             </ng-template>
         </clr-dg-row>
-    
+
         <clr-dg-footer>{{items.length}} items</clr-dg-footer>
     </clr-datagrid>
 `,
@@ -263,6 +268,32 @@ class ChocolateNgForTest {
   expandable = false;
 }
 
+@Component({
+  template: `
+    <clr-datagrid>
+        <clr-dg-column>First</clr-dg-column>
+        <clr-dg-column>Second</clr-dg-column>
+
+        <clr-dg-row *clrDgItems="let item of items;" [clrDgItem]="item">
+            <clr-dg-cell>{{item}}</clr-dg-cell>
+            <ng-template [ngIf]="expandable">
+                <clr-dg-row-detail *clrIfExpanded>Detail</clr-dg-row-detail>
+            </ng-template>
+        </clr-dg-row>
+
+        <clr-dg-footer>{{items.length}} items</clr-dg-footer>
+    </clr-datagrid>
+`,
+})
+class MixedExpandableRowTest {
+  items = [1, 2, 3, 4];
+  private _expandable = true;
+  get expandable() {
+    this._expandable = !this._expandable;
+    return this._expandable;
+  }
+}
+
 class TestComparator implements ClrDatagridComparatorInterface<number> {
   compare(a: number, b: number): number {
     return 0;
@@ -309,7 +340,7 @@ class TestStringFilter implements ClrDatagridStringFilterInterface<number> {
             </ng-container>
         </clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *ngFor="let item of items;">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
@@ -325,7 +356,7 @@ class HiddenColumnTest {
     <clr-datagrid>
         <clr-dg-column>First</clr-dg-column>
         <clr-dg-column>Second</clr-dg-column>
-    
+
         <clr-dg-row *ngFor="let item of items;">
             <clr-dg-cell>{{item}}</clr-dg-cell>
             <clr-dg-cell>{{item * item}}</clr-dg-cell>
@@ -350,13 +381,13 @@ class ProjectionTest {
 
       <clr-dg-row *ngFor="let item of items;">
           <clr-dg-cell>{{item}}</clr-dg-cell>
-          <clr-dg-cell>{{item * item}}</clr-dg-cell>    
+          <clr-dg-cell>{{item * item}}</clr-dg-cell>
           <clr-dg-row-detail *clrIfExpanded="true" [clrDgReplace]="true">
               <clr-dg-cell class="hidden-cell">{{item}} (col 1 detail)</clr-dg-cell>
               <clr-dg-cell>{{item * item}} detail (col 2 detail)</clr-dg-cell>
           </clr-dg-row-detail>
       </clr-dg-row>
-  </clr-datagrid>    
+  </clr-datagrid>
   `,
 })
 class ExpandedReplacedCellsTest {
@@ -423,6 +454,18 @@ export default function(): void {
 
       beforeEach(function() {
         context = this.create(ClrDatagrid, FullTest);
+      });
+
+      it('should cretae default values for clrDgSingleSelectionAriaLabel, clrDgSingleActionableAriaLabel, clrDetailExpandableAriaLabel', function() {
+        expect(context.clarityDirective.clrDgSingleSelectionAriaLabel).toBe(
+          commonStringsDefault.singleSelectionAriaLabel
+        );
+        expect(context.clarityDirective.clrDgSingleActionableAriaLabel).toBe(
+          commonStringsDefault.singleActionableAriaLabel
+        );
+        expect(context.clarityDirective.clrDetailExpandableAriaLabel).toBe(
+          commonStringsDefault.detailExpandableAriaLabel
+        );
       });
 
       it('receives an input for the loading state', function() {
@@ -527,6 +570,7 @@ export default function(): void {
               from: 2,
               to: 3,
               size: 2,
+              current: 2,
             },
             sort: {
               by: comparator,
@@ -655,6 +699,16 @@ export default function(): void {
         expect(headActionOverflowCell).toBeNull();
         expect(actionOverflowCell.length).toEqual(0);
       });
+
+      it('should have aria-label with value `Select one of actionable rows`', function() {
+        context = this.create(ClrDatagrid, ActionableRowTest);
+        context.getClarityProvider(RowActionService);
+        expect(
+          context.clarityElement
+            .querySelector('.datagrid-header .datagrid-column.datagrid-row-actions')
+            .getAttribute('aria-label')
+        ).toBe('Select one of actionable rows');
+      });
     });
 
     describe('Expandable rows', function() {
@@ -684,6 +738,24 @@ export default function(): void {
         const hiddenCell: HTMLElement = context.clarityElement.querySelector('.hidden-cell');
         expect(hiddenCell.classList).toContain(HIDDEN_COLUMN_CLASS);
         expect(window.getComputedStyle(hiddenCell).display).toBe('none');
+      });
+
+      it('can render mixed expandable/non-expandable', function() {
+        const context = this.create(ClrDatagrid, MixedExpandableRowTest);
+        const caretIcons = context.clarityElement.querySelectorAll('.datagrid-expandable-caret-icon');
+        expect(caretIcons.length).toBe(2);
+        const datagridCells = context.clarityElement.querySelectorAll('.datagrid-cell');
+        expect(datagridCells.length).toBe(8); // 4 items * (1 for the data + 1 for the caret/placeholder)
+      });
+
+      it('should have aria-label with value `Expand one of the rows`', function() {
+        const context = this.create(ClrDatagrid, ExpandableRowTest);
+        context.getClarityProvider(RowActionService);
+        expect(
+          context.clarityElement
+            .querySelector('.datagrid-header .datagrid-column.datagrid-expandable-caret')
+            .getAttribute('aria-label')
+        ).toBe('Expand one of the rows');
       });
     });
 
@@ -778,6 +850,16 @@ export default function(): void {
       });
 
       describe('View', function() {
+        /*
+         * For some reason this test is breaking all other tests.
+         * Not sure why - need to investigate more
+         *
+        it('should have aria-label with  value Select', function() {
+          expect(context.clarityElement.querySelector('.datagrid-header .datagrid-column.datagrid-select')
+          .getAttribute('aria-label')).toBe('Select row from Datagrid');
+        });
+        */
+
         it('sets the proper selected class', function() {
           const row = context.clarityElement.querySelectorAll('.datagrid-row')[1];
           expect(row.classList.contains('datagrid-selected')).toBeFalsy();
@@ -853,7 +935,7 @@ export default function(): void {
       let displayModeService: MockDisplayModeService;
 
       beforeEach(function() {
-        context = this.createWithOverride(ClrDatagrid, ProjectionTest, [], [], DATAGRID_SPEC_PROVIDERS);
+        context = this.createWithOverrideComponent(ClrDatagrid, ProjectionTest, [], [], DATAGRID_SPEC_PROVIDERS);
         displayModeService = <MockDisplayModeService>context.getClarityProvider(DisplayModeService);
       });
 

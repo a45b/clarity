@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -7,19 +7,19 @@ import { Component, ViewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { ClrIfOpen } from './if-open.directive';
-import { IfOpenService } from './if-open.service';
+import { ClrPopoverToggleService } from '../../utils/popover/providers/popover-toggle.service';
 
 export default function(): void {
   describe('IfOpen Directive', function() {
     describe('Typescript API', function() {
       beforeEach(function() {
-        TestBed.configureTestingModule({ declarations: [ClrIfOpen, IfOpenTest], providers: [IfOpenService] });
+        TestBed.configureTestingModule({ declarations: [ClrIfOpen, IfOpenTest], providers: [ClrPopoverToggleService] });
         this.fixture = TestBed.createComponent(IfOpenTest);
         this.fixture.detectChanges();
         this.testComponent = this.fixture.componentInstance;
         this.testElement = this.fixture.nativeElement;
         this.clarityDirective = this.fixture.componentInstance.directive;
-        this.ifOpenService = TestBed.get(IfOpenService);
+        this.toggleService = TestBed.get(ClrPopoverToggleService);
       });
 
       afterEach(function() {
@@ -33,9 +33,9 @@ export default function(): void {
       });
 
       it('gets the current value of the open state', function() {
-        this.ifOpenService.open = true;
+        this.toggleService.open = true;
         expect(this.testComponent.openState).toEqual(true);
-        this.ifOpenService.open = false;
+        this.toggleService.open = false;
         expect(this.testComponent.openState).toEqual(false);
       });
 
@@ -43,11 +43,11 @@ export default function(): void {
         expect(this.clarityDirective.updateView).toBeDefined();
 
         // when openState is false there should be no embedded views
-        expect(this.clarityDirective.container._embeddedViews.length).toEqual(0);
+        expect(this.clarityDirective.container.length).toEqual(0);
 
         // We can call the updateView function
         this.clarityDirective.updateView(true);
-        expect(this.clarityDirective.container._embeddedViews.length).toEqual(1);
+        expect(this.clarityDirective.container.length).toEqual(1);
       });
 
       it('emits an openChange event', function() {
@@ -59,7 +59,7 @@ export default function(): void {
         });
         expect(nbChanges).toBe(0);
         expect(currentChange).toBeUndefined();
-        this.ifOpenService.open = true;
+        this.toggleService.open = true;
         this.fixture.detectChanges();
         expect(nbChanges).toBe(1);
         expect(currentChange).toBe(true);
@@ -68,13 +68,13 @@ export default function(): void {
 
     describe('View', function() {
       beforeEach(function() {
-        TestBed.configureTestingModule({ declarations: [ClrIfOpen, IfOpenTest], providers: [IfOpenService] });
+        TestBed.configureTestingModule({ declarations: [ClrIfOpen, IfOpenTest], providers: [ClrPopoverToggleService] });
         this.fixture = TestBed.createComponent(IfOpenTest);
         this.fixture.detectChanges();
         this.testComponent = this.fixture.componentInstance;
         this.testElement = this.fixture.nativeElement;
         this.clarityDirective = this.fixture.componentInstance.directive;
-        this.ifOpenService = TestBed.get(IfOpenService);
+        this.toggleService = TestBed.get(ClrPopoverToggleService);
       });
 
       afterEach(function() {
@@ -87,7 +87,7 @@ export default function(): void {
       });
 
       it('projects content when true', function() {
-        this.ifOpenService.open = true;
+        this.toggleService.open = true;
         this.fixture.detectChanges();
         expect(this.testElement.textContent.trim()).toBe('Hello Template!');
       });
@@ -103,7 +103,6 @@ export default function(): void {
     `,
 })
 class IfOpenTest {
-  @ViewChild(ClrIfOpen, { static: false })
-  directive: ClrIfOpen;
+  @ViewChild(ClrIfOpen) directive: ClrIfOpen;
   openState: boolean = false;
 }

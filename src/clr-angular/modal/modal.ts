@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -9,19 +9,18 @@ import {
   EventEmitter,
   HostBinding,
   HostListener,
+  Inject,
   Input,
   OnChanges,
   OnDestroy,
   Output,
   SimpleChange,
   ViewChild,
-  Inject,
 } from '@angular/core';
-
 import { FocusTrapDirective } from '../utils/focus-trap/focus-trap.directive';
-import { ScrollingService } from '../utils/scrolling/scrolling-service';
-import { ClrCommonStrings } from '../utils/i18n/common-strings.interface';
+import { ClrCommonStringsService } from '../utils/i18n/common-strings.service';
 import { UNIQUE_ID, UNIQUE_ID_PROVIDER } from '../utils/id-generator/id-generator.service';
+import { ScrollingService } from '../utils/scrolling/scrolling-service';
 
 @Component({
   selector: 'clr-modal',
@@ -46,8 +45,7 @@ import { UNIQUE_ID, UNIQUE_ID_PROVIDER } from '../utils/id-generator/id-generato
   providers: [UNIQUE_ID_PROVIDER],
 })
 export class ClrModal implements OnChanges, OnDestroy {
-  @ViewChild(FocusTrapDirective, { static: false })
-  focusTrap: FocusTrapDirective;
+  @ViewChild(FocusTrapDirective) focusTrap: FocusTrapDirective;
 
   @HostBinding('class.open')
   @Input('clrModalOpen')
@@ -66,17 +64,9 @@ export class ClrModal implements OnChanges, OnDestroy {
 
   constructor(
     private _scrollingService: ScrollingService,
-    public commonStrings: ClrCommonStrings,
+    public commonStrings: ClrCommonStringsService,
     @Inject(UNIQUE_ID) public modalId: string
   ) {}
-
-  get sizeClass(): string {
-    if (this.size) {
-      return 'modal-' + this.size;
-    } else {
-      return '';
-    }
-  }
 
   // Detect when _open is set to true and set no-scrolling to true
   ngOnChanges(changes: { [propName: string]: SimpleChange }): void {
@@ -111,15 +101,13 @@ export class ClrModal implements OnChanges, OnDestroy {
       return;
     }
     this._open = false;
-    // todo: remove this after animation bug is fixed https://github.com/angular/angular/issues/15798
-    // this was handled by the fadeDone event below, but that AnimationEvent is not firing in Angular 4.0.
-    this._openChanged.emit(false);
     // SPECME
     this.focusTrap.setPreviousFocus(); // Handles moving focus back to the element that had it before.
   }
 
   fadeDone(e: AnimationEvent) {
     if (e.toState === 'void') {
+      // TODO: Investigate if we can decouple from animation events
       this._openChanged.emit(false);
     }
   }

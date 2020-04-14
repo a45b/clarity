@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -18,9 +18,11 @@ import { ProgressBarInlineDemo } from './progress-bar-inline';
 import { ProgressBarInlineCardsDemo } from './progress-bar-inline-cards';
 import { OldProgressBarCardsDemo } from './old-progress-bar-cards';
 import { ProgressBarsDemo } from './progress-bars.demo';
+import { ProgressBarComponentDemo } from './progress-bar-component.demo';
 import { RouterModule } from '@angular/router';
 import { DocWrapperModule } from '../_doc-wrapper/doc-wrapper.module';
 import { UtilsModule } from '../../../utils/utils.module';
+import { ProgressBarStoryDemo } from './progress-bar-story';
 
 @NgModule({
   imports: [
@@ -41,8 +43,9 @@ import { UtilsModule } from '../../../utils/utils.module';
     ProgressBarStaticCardsDemo,
     ProgressBarInlineDemo,
     ProgressBarInlineCardsDemo,
+    ProgressBarComponentDemo,
     OldProgressBarCardsDemo,
-
+    ProgressBarStoryDemo,
     ProgressBarsDemo,
   ],
   exports: [ProgressBarsDemo],

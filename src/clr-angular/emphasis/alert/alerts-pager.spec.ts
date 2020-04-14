@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 VMware, Inc. All Rights Reserved.
+ * Copyright (c) 2016-2020 VMware, Inc. All Rights Reserved.
  * This software is released under MIT license.
  * The full license information can be found in LICENSE in the root directory of this project.
  */
@@ -11,6 +11,7 @@ import { ClrEmphasisModule } from '../../emphasis/emphasis.module';
 import { ClrAlert } from './alert';
 import { ClrAlertsPager } from './alerts-pager';
 import { MultiAlertService } from './providers/multi-alert.service';
+import { ClrCommonStringsService } from '../../utils/i18n/common-strings.service';
 
 export default function() {
   describe('ClrAlerts pager component', function() {
@@ -20,7 +21,7 @@ export default function() {
 
       beforeEach(() => {
         service = new MultiAlertService();
-        component = new ClrAlertsPager(service, {});
+        component = new ClrAlertsPager(service, new ClrCommonStringsService());
       });
 
       afterEach(() => {
@@ -99,14 +100,12 @@ export default function() {
 
 @Component({ template: `<clr-alerts-pager [(clrCurrentAlertIndex)]="index"></clr-alerts-pager>` })
 export class TestIndex {
-  @ViewChild(ClrAlertsPager, { static: false })
-  pagerInstance: ClrAlertsPager;
+  @ViewChild(ClrAlertsPager) pagerInstance: ClrAlertsPager;
   index: number = 0;
 }
 
 @Component({ template: `<clr-alerts-pager [(clrCurrentAlert)]="currentAlert"></clr-alerts-pager>` })
 export class TestInstance {
-  @ViewChild(ClrAlertsPager, { static: false })
-  pagerInstance: ClrAlertsPager;
+  @ViewChild(ClrAlertsPager) pagerInstance: ClrAlertsPager;
   currentAlert: ClrAlert;
 }
